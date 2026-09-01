@@ -308,14 +308,16 @@ export default function Navigation() {
                         </span>
                       )}
                     </div>
-                    <Link
-                      href={ROUTES.dashboard}
-                      onClick={() => setAccountOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-surface-muted text-ink"
-                    >
-                      <User className="w-4 h-4 text-ink-muted" />
-                      Sản phẩm của tôi
-                    </Link>
+                    {!isAdmin && (
+                      <Link
+                        href={ROUTES.dashboard}
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg hover:bg-surface-muted text-ink"
+                      >
+                        <User className="w-4 h-4 text-ink-muted" />
+                        Sản phẩm của tôi
+                      </Link>
+                    )}
                     {isAdmin && (
                       <Link
                         href={ROUTES.admin}

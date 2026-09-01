@@ -19,7 +19,7 @@ interface AuthContextValue {
   loading: boolean;
   /** 'supabase' nếu có env, 'local' nếu đang fallback */
   mode: 'supabase' | 'local';
-  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string; user?: AuthUser }>;
   signup: (
     email: string,
     password: string,
@@ -143,9 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (mode === 'supabase') {
         const supabase = createBrowserSupabase();
         if (!supabase) return { ok: false, error: 'Supabase chưa sẵn sàng.' };
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return { ok: false, error: error.message };
-        return { ok: true };
+        const u = mapSupabaseUser(data.user);
+        return { ok: true, user: u };
       }
       // localStorage fallback
       await new Promise((r) => setTimeout(r, 400));
@@ -165,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       writeSession(session);
       setUser(session);
-      return { ok: true };
+      return { ok: true, user: session };
     },
     [mode]
   );

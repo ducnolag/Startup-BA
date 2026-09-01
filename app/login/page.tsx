@@ -40,7 +40,7 @@ function LoginContent() {
     }
 
     // Admin → /admin, user thường → /dashboard
-    if (user?.role === 'admin') {
+    if (result.user?.role === 'admin') {
       router.push('/admin');
     } else {
       router.push('/dashboard');
