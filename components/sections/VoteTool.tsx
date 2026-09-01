@@ -1,25 +1,106 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import {
   VOTE_SURVEY_URL,
   VOTE_TELEGRAM_URL,
   VOTE_TELEGRAM_HANDLE,
 } from '@/lib/constants';
 import { ArrowUpRight, ClipboardList, Send } from 'lucide-react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const hasSurvey = VOTE_SURVEY_URL.trim().length > 0;
 const hasTelegram = VOTE_TELEGRAM_URL.trim().length > 0;
 
 export default function VoteTool() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    const left = leftRef.current;
+    const right = rightRef.current;
+    if (!section || !left || !right) return;
+
+    const ctx = gsap.context(() => {
+      // ── Left side slides in from left ──
+      gsap.fromTo(
+        left,
+        { opacity: 0, x: -60 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 1,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 80%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+
+      // ── Right side slides in from right ──
+      gsap.fromTo(
+        right,
+        { opacity: 0, x: 60 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 1,
+          delay: 0.15,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 80%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+
+      // ── CTA buttons stagger ──
+      const buttons = right.querySelectorAll('a');
+      if (buttons.length > 0) {
+        gsap.fromTo(
+          buttons,
+          { opacity: 0, y: 20, scale: 0.95 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.6,
+            stagger: 0.12,
+            delay: 0.4,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: section,
+              start: 'top 80%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+      }
+    });
+
+    return () => ctx.revert();
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       id="vote"
       className="py-20 md:py-28 bg-surface-muted border-y border-line"
     >
       <div className="container-page">
         <div className="grid md:grid-cols-12 gap-10 md:gap-14 items-center">
           {/* LEFT — Title + description */}
-          <div className="md:col-span-7">
+          <div ref={leftRef} className="md:col-span-7" style={{ opacity: 0 }}>
             <span className="eyebrow mb-4 inline-flex">
               Cộng đồng quyết định
             </span>
@@ -39,7 +120,7 @@ export default function VoteTool() {
           </div>
 
           {/* RIGHT — CTA stack */}
-          <div className="md:col-span-5">
+          <div ref={rightRef} className="md:col-span-5" style={{ opacity: 0 }}>
             {(hasSurvey || hasTelegram) ? (
               <div className="flex flex-col gap-3">
                 {hasSurvey && (
@@ -48,6 +129,7 @@ export default function VoteTool() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group flex items-center justify-between gap-4 rounded-2xl bg-ink text-white px-5 py-4 hover:bg-ink/90 transition-colors"
+                    style={{ opacity: 0 }}
                   >
                     <span className="flex items-center gap-3">
                       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
@@ -72,6 +154,7 @@ export default function VoteTool() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group flex items-center justify-between gap-4 rounded-2xl bg-white border border-line text-ink px-5 py-4 hover:border-line-strong transition-colors"
+                    style={{ opacity: 0 }}
                   >
                     <span className="flex items-center gap-3">
                       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-muted text-ink">

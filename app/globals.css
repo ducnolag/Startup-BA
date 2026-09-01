@@ -81,13 +81,11 @@
     transform: translateY(-1px);
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
   }
-
   .btn-primary:active {
     transform: translateY(0);
     background: #0a1322;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15) inset;
   }
-
   .btn-primary:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 3px;
@@ -133,12 +131,10 @@
     background: var(--bg-muted);
     border-color: var(--line-strong);
   }
-
   .btn-ghost:active {
     background: var(--bg-muted);
     transform: scale(0.98);
   }
-
   .btn-ghost:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 3px;
@@ -232,6 +228,118 @@
     background: var(--success);
     flex-shrink: 0;
   }
+
+  /* ═══════════════════════════════════════════════════════
+     Logo Marquee — Infinite auto-sliding ticker
+     ═══════════════════════════════════════════════════════ */
+  .logo-marquee-container {
+    overflow: hidden;
+    padding: 16px 0;
+    position: relative;
+    /* Fade edges */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 10%,
+      black 90%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 10%,
+      black 90%,
+      transparent 100%
+    );
+  }
+
+  .logo-marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee-scroll 35s linear infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .logo-marquee:hover {
+    animation-play-state: paused;
+  }
+
+  .logo-marquee-item {
+    flex-shrink: 0;
+    padding: 8px 32px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  .logo-marquee-item:hover {
+    transform: scale(1.1);
+  }
+
+  .logo-marquee-item:hover span {
+    opacity: 1 !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     3D Tilt Card utility
+     ═══════════════════════════════════════════════════════ */
+  .card-3d-tilt {
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     Scroll-reveal section titles
+     ═══════════════════════════════════════════════════════ */
+  .reveal-line {
+    display: block;
+    transform-origin: left center;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     Gradient border animation on hover
+     ═══════════════════════════════════════════════════════ */
+  .card-gradient-border {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: 16px;
+    background: linear-gradient(
+      135deg,
+      transparent 30%,
+      var(--brand) 50%,
+      transparent 70%
+    );
+    background-size: 200% 200%;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  .card-gradient-border:hover::before {
+    opacity: 1;
+    animation: gradient-border-shift 2s linear infinite;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     Counter animation container
+     ═══════════════════════════════════════════════════════ */
+  .counter-value {
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @layer utilities {
@@ -261,9 +369,34 @@
       padding-right: 2rem;
     }
   }
+
+  /* 3D perspective context */
+  .perspective-1200 {
+    perspective: 1200px;
+  }
+  .perspective-800 {
+    perspective: 800px;
+  }
 }
 
-/* Antigravity-style float animations for hero */
+/* ===== Keyframes (must be outside @layer) ===== */
+
+/* Logo marquee — seamless infinite scroll */
+@keyframes marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Legacy slicer — kept for backward compat */
+@keyframes slicer {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 @keyframes float1 {
   0%, 100% { transform: translateY(0) translateX(0) scale(1); }
   33% { transform: translateY(-18px) translateX(6px) scale(1.04); }
@@ -288,6 +421,63 @@
   50% { transform: translate(-50px, -40px) scale(1.1); }
 }
 
+/* Gradient border shift */
+@keyframes gradient-border-shift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Chart line draw animation */
+@keyframes line-draw {
+  0% { stroke-dashoffset: 400; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.chart-line-draw {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: line-draw 2s ease-out forwards;
+  animation-delay: 0.5s;
+}
+
+/* ===== Reveal animation for data-anim elements ===== */
+[data-anim] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+[data-anim].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== Slicer overlay reveal ===== */
+[data-slicer] {
+  position: relative;
+  overflow: hidden;
+}
+[data-slicer]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+[data-slicer].is-visible::before {
+  transform: translateX(100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -296,5 +486,11 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Bắt buộc marquee vẫn chạy dẫu OS có tắt hiệu ứng */
+  .logo-marquee {
+    animation-duration: 35s !important;
+    animation-iteration-count: infinite !important;
   }
 }

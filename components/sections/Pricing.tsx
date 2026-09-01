@@ -1,7 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 const plans = [
   {
@@ -66,11 +72,88 @@ function formatPrice(price: number) {
 
 export default function Pricing() {
   const [yearly, setYearly] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    const heading = headingRef.current;
+    const grid = gridRef.current;
+    if (!section || !heading || !grid) return;
+
+    const cards = grid.querySelectorAll('.pricing-card');
+
+    const ctx = gsap.context(() => {
+      // ── Heading reveal ──
+      gsap.fromTo(
+        heading,
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: section,
+            start: 'top 80%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+
+      // ── Cards stagger — featured card scales up more ──
+      gsap.fromTo(
+        cards,
+        {
+          opacity: 0,
+          y: 80,
+          scale: 0.85,
+        },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 1,
+          stagger: 0.15,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: grid,
+            start: 'top 85%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+
+      // ── Feature list items stagger ──
+      cards.forEach((card) => {
+        const items = card.querySelectorAll('.pricing-feature');
+        gsap.fromTo(
+          items,
+          { opacity: 0, x: -15 },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.4,
+            stagger: 0.05,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 75%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+      });
+    });
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <section id="pricing" className="py-20 md:py-28 bg-surface-muted border-y border-line">
+    <section ref={sectionRef} id="pricing" className="py-20 md:py-28 bg-surface-muted border-y border-line">
       <div className="container-page">
-        <div data-anim className="text-center max-w-2xl mx-auto mb-12">
+        <div ref={headingRef} className="text-center max-w-2xl mx-auto mb-12" style={{ opacity: 0 }}>
           <div className="eyebrow mb-4 justify-center">Bảng giá</div>
           <h2
             className="font-display font-bold text-ink tracking-tight text-3xl md:text-5xl leading-[1.1]"
@@ -113,16 +196,20 @@ export default function Pricing() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto">
+        <div
+          ref={gridRef}
+          className="grid lg:grid-cols-3 gap-5 md:gap-6 max-w-5xl mx-auto"
+          style={{ perspective: '1200px' }}
+        >
           {plans.map((plan) => (
             <div
               key={plan.name}
-              data-anim
-              className={`relative card p-7 md:p-8 flex flex-col ${
+              className={`pricing-card relative card p-7 md:p-8 flex flex-col ${
                 plan.featured
                   ? 'border-ink shadow-card-hover lg:scale-[1.02] lg:-translate-y-2'
                   : ''
               }`}
+              style={{ opacity: 0 }}
             >
               {plan.badge && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-ink text-white text-xs font-semibold">
@@ -175,7 +262,8 @@ export default function Pricing() {
                   {plan.features.map((feature) => (
                     <li
                       key={feature}
-                      className="flex items-start gap-2.5 text-sm text-ink-muted"
+                      className="pricing-feature flex items-start gap-2.5 text-sm text-ink-muted"
+                      style={{ opacity: 0 }}
                     >
                       <span className="mt-1 w-4 h-4 rounded-full bg-brand/10 flex items-center justify-center flex-shrink-0">
                         <span className="w-1.5 h-1.5 rounded-full bg-brand" />
