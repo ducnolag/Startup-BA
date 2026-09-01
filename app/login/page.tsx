@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import { Suspense } from 'react';
 import { useAuth } from '@/components/providers/AuthProvider';
 
@@ -46,15 +47,10 @@ function LoginContent() {
     }
   };
 
-  const fillAdmin = () => {
-    setEmail('admin@toolify.vn');
-    setPassword('admin123');
-  };
-
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center px-6 py-12">
+    <main className="min-h-screen bg-white flex items-center justify-center px-6 py-12 relative">
       <div className="w-full max-w-md">
-        <Link href="/" className="flex items-center gap-2.5 mb-10">
+        <Link href="/" className="flex items-center justify-center gap-2.5 mb-10">
           <Image
             src="/logo.png"
             alt="Toolify.vn"
@@ -68,6 +64,15 @@ function LoginContent() {
         </Link>
 
         <div className="card p-8 md:p-10">
+          <div className="mb-6">
+            <Link 
+              href="/" 
+              className="inline-flex items-center gap-2 text-sm font-medium text-ink-muted hover:text-ink transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Quay lại
+            </Link>
+          </div>
           <h1
             className="font-display font-bold text-2xl md:text-3xl text-ink tracking-tight mb-2"
             style={{ letterSpacing: '-0.025em' }}
@@ -124,14 +129,6 @@ function LoginContent() {
               {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
-
-          <button
-            type="button"
-            onClick={fillAdmin}
-            className="mt-3 w-full text-xs text-ink-muted hover:text-ink py-2 border border-dashed border-line rounded-lg transition-colors hover:bg-surface-muted"
-          >
-            Dùng tài khoản admin demo · admin@toolify.vn / admin123
-          </button>
 
           <div className="my-6 flex items-center gap-3 text-xs text-ink-subtle">
             <div className="flex-1 h-px bg-line" />

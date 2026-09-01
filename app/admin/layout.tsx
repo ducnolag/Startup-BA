@@ -11,6 +11,8 @@ import {
   ArrowLeft,
   Shield,
 } from 'lucide-react';
+import Navigation from '@/components/layout/Navigation';
+import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/constants';
@@ -45,9 +47,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-surface-muted pt-20">
-      <div className="container-page">
-        <div className="grid lg:grid-cols-[240px_1fr] gap-6 pb-16">
+    <div className="relative bg-surface-muted min-h-screen flex flex-col">
+      <Navigation />
+      <div className="flex-1 container-page pt-24 pb-16">
+        <div className="grid lg:grid-cols-[240px_1fr] gap-6">
           {/* Sidebar */}
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div className="card p-4">
@@ -98,6 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="min-w-0">{children}</div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

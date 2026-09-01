@@ -63,7 +63,7 @@ function mapSupabaseUser(u: {
     id: u.id,
     email: u.email ?? '',
     fullName,
-    role: 'user',
+    role: (meta.role as 'admin' | 'user') || 'user',
     createdAt: u.created_at ?? new Date().toISOString(),
   };
 }

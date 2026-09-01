@@ -16,9 +16,11 @@ export async function GET(request: Request) {
     const cookieStore = cookies();
     const supabase = createServerSupabase(cookieStore);
     if (supabase) {
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       if (!error) {
-        return NextResponse.redirect(`${origin}${next}`);
+        const role = data.session?.user?.user_metadata?.role;
+        const redirectUrl = role === 'admin' ? '/admin' : next;
+        return NextResponse.redirect(`${origin}${redirectUrl}`);
       } else {
         return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`);
       }

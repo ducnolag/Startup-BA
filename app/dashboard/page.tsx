@@ -11,7 +11,12 @@ import {
   Bell,
   LogOut,
   Shield,
+  User,
+  ShoppingBag,
+  Settings,
 } from 'lucide-react';
+import Navigation from '@/components/layout/Navigation';
+import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { cn } from '@/lib/utils';
 import { readStorage } from '@/lib/storage';
@@ -22,7 +27,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, loading, isAdmin, logout } = useAuth();
   const [saved, setSaved] = useState<SavedItem[]>([]);
-  const [tab, setTab] = useState<'overview' | 'saved' | 'settings'>('overview');
+  const [tab, setTab] = useState<'profile' | 'saved' | 'settings'>('profile');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -45,100 +50,137 @@ export default function DashboardPage() {
   const initials = user.fullName.charAt(0).toUpperCase();
 
   return (
-    <main className="min-h-screen bg-surface-muted pt-24 pb-16 px-6">
-      <div className="container-page">
-        {/* Header */}
-        <div className="card p-6 md:p-8 mb-6">
-          <div className="flex items-start gap-4 flex-wrap">
-            <div className="w-14 h-14 rounded-full bg-brand text-white flex items-center justify-center text-xl font-bold shrink-0">
-              {initials}
-            </div>
-            <div className="flex-1 min-w-[200px]">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="font-display font-bold text-2xl text-ink">
+    <div className="relative bg-surface-muted min-h-screen flex flex-col">
+      <Navigation />
+      
+      <main className="flex-1 pt-32 md:pt-40 pb-16 px-6 flex flex-col justify-center">
+        <div className="container-page max-w-6xl w-full">
+          <div className="grid md:grid-cols-[260px_1fr] gap-8 items-start">
+            
+            {/* Sidebar (Left Column) */}
+            <aside className="sticky top-24 space-y-4">
+              {/* Profile Summary Card */}
+              <div className="card p-5 text-center">
+                <div className="w-20 h-20 mx-auto rounded-full bg-brand text-white flex items-center justify-center text-3xl font-bold mb-3">
+                  {initials}
+                </div>
+                <h1 className="font-display font-bold text-xl text-ink truncate">
                   {user.fullName}
                 </h1>
+                <p className="text-ink-muted text-xs truncate mt-1">{user.email}</p>
                 {isAdmin && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-brand-deep bg-brand/10 px-1.5 py-0.5 rounded">
-                    <Shield className="w-2.5 h-2.5" />
-                    Admin
-                  </span>
+                  <div className="mt-3">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-brand-deep bg-brand/10 px-2 py-1 rounded-full">
+                      <Shield className="w-3 h-3" />
+                      Quản trị viên
+                    </span>
+                  </div>
                 )}
               </div>
-              <p className="text-ink-muted text-sm mt-1">{user.email}</p>
-              <p className="text-ink-subtle text-xs mt-2">
-                Tham gia từ {new Date(user.createdAt).toLocaleDateString('vi-VN')}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              {isAdmin && (
-                <Link href="/admin" className="btn-ghost">
-                  <Shield className="w-4 h-4" />
-                  Trang quản trị
-                </Link>
-              )}
-              <button
-                onClick={() => {
-                  logout();
-                  router.push('/');
-                }}
-                className="btn-ghost"
-              >
-                <LogOut className="w-4 h-4" />
-                Đăng xuất
-              </button>
-            </div>
-          </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-1 mb-6 border-b border-line overflow-x-auto">
-          {(
-            [
-              { id: 'overview', label: 'Tổng quan' },
-              { id: 'saved', label: 'Đã lưu' },
-              { id: 'settings', label: 'Cài đặt' },
-            ] as const
-          ).map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={cn(
-                'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap',
-                tab === t.id
-                  ? 'border-ink text-ink'
-                  : 'border-transparent text-ink-muted hover:text-ink'
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+              {/* Navigation Menu */}
+              <div className="card p-3">
+                <nav className="space-y-1">
+                  {(
+                    [
+                      { id: 'profile', label: 'Thông tin cá nhân', icon: User },
+                      { id: 'saved', label: 'Đơn hàng & Đã lưu', icon: ShoppingBag },
+                      { id: 'settings', label: 'Cài đặt', icon: Settings },
+                    ] as const
+                  ).map((t) => {
+                    const Icon = t.icon;
+                    const isActive = tab === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTab(t.id)}
+                        className={cn(
+                          'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left',
+                          isActive
+                            ? 'bg-ink text-white'
+                            : 'text-ink-muted hover:text-ink hover:bg-surface-muted'
+                        )}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </nav>
 
-        {tab === 'overview' && (
-          <div className="grid md:grid-cols-3 gap-4 mb-6">
-            <ToolCard
-              icon={<GraduationCap className="w-5 h-5" />}
-              title="Săn học bổng"
-              desc="Tìm kiếm trong 500+ cơ hội quốc tế"
-              href="/tools/scholarship"
-              accent="bg-blue-50 text-blue-700"
-            />
-            <ToolCard
-              icon={<TrendingDown className="w-5 h-5" />}
-              title="So sánh giá"
-              desc="Lịch sử giá 90 ngày trên 4 sàn"
-              href="/tools/price-compare"
-              accent="bg-emerald-50 text-emerald-700"
-            />
-            <ToolCard
-              icon={<Sparkles className="w-5 h-5" />}
-              title="Gợi ý giá AI"
-              desc="Chatbot phân tích & khuyến nghị"
-              href="/tools/price-recommend"
-              accent="bg-violet-50 text-violet-700"
-              isNew
-            />
+                <div className="mt-3 pt-3 border-t border-line space-y-1">
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-ink-muted hover:text-ink hover:bg-surface-muted transition-colors"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Trang quản trị
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      logout();
+                      router.push('/');
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-danger hover:bg-danger/10 transition-colors text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Đăng xuất
+                  </button>
+                </div>
+              </div>
+            </aside>
+
+            {/* Main Content (Right Column) */}
+            <div className="min-w-0 space-y-6">
+              {tab === 'profile' && (
+                <div className="card p-6 md:p-8">
+                  <div className="flex items-center gap-2 mb-1">
+                    <User className="w-5 h-5 text-brand" />
+                    <h2 className="font-display font-bold text-xl text-ink">Hồ sơ cá nhân</h2>
+                  </div>
+                  <p className="text-sm text-ink-muted mb-8">
+                    Quản lý thông tin chi tiết và theo dõi hoạt động của bạn trên Toolify.
+                  </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-xs font-semibold text-ink-muted mb-1.5 block">Họ và tên</label>
+                <div className="font-medium text-ink">{user.fullName}</div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-ink-muted mb-1.5 block">Email</label>
+                <div className="font-medium text-ink">{user.email}</div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-ink-muted mb-1.5 block">Vai trò</label>
+                <div className="font-medium text-ink flex items-center gap-2">
+                  {isAdmin ? (
+                    <span className="text-brand-deep font-bold flex items-center gap-1"><Shield className="w-4 h-4"/> Quản trị viên</span>
+                  ) : (
+                    <span className="text-ink">Người dùng</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-ink-muted mb-1.5 block">Ngày tham gia</label>
+                <div className="font-medium text-ink">{new Date(user.createdAt).toLocaleDateString('vi-VN')}</div>
+              </div>
+            </div>
+            
+            <div className="mt-8 pt-6 border-t border-line">
+              <h3 className="font-display font-bold text-md text-ink mb-4">Thống kê hoạt động</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-surface-muted p-4 rounded-xl border border-line">
+                  <div className="text-2xl font-bold text-ink mb-1">{saved.length}</div>
+                  <div className="text-xs text-ink-muted">Sản phẩm/Học bổng đã lưu</div>
+                </div>
+                <div className="bg-surface-muted p-4 rounded-xl border border-line">
+                  <div className="text-2xl font-bold text-ink mb-1">0</div>
+                  <div className="text-xs text-ink-muted">Đơn hàng đã đặt</div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -240,8 +282,12 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-      </div>
-    </main>
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
   );
 }
 

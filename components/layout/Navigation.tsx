@@ -130,7 +130,7 @@ export default function Navigation() {
       ref={navRef}
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        scrolled
+        (scrolled || !isHome)
           ? 'bg-white/90 backdrop-blur-lg border-b border-line'
           : 'bg-white/0 border-b border-transparent'
       )}
@@ -249,13 +249,15 @@ export default function Navigation() {
             Câu chuyện
           </Link>
 
-          {/* Sản phẩm: luôn hiện. Nếu chưa login → /login; nếu rồi → /dashboard */}
-          <Link
-            href={user ? ROUTES.dashboard : ROUTES.login}
-            className={linkClass(isDashboard)}
-          >
-            Sản phẩm
-          </Link>
+          {/* Sản phẩm: luôn hiện với user thường/chưa login */}
+          {!isAdmin && (
+            <Link
+              href={user ? ROUTES.dashboard : ROUTES.login}
+              className={linkClass(isDashboard)}
+            >
+              Sản phẩm
+            </Link>
+          )}
 
           {/* Admin link chỉ hiện với admin */}
           {isAdmin && (
@@ -379,6 +381,7 @@ export default function Navigation() {
             >
               Trang chủ
             </Link>
+
             <div className="text-xs font-semibold text-ink-subtle uppercase tracking-wider px-3 py-2">
               Công cụ
             </div>
@@ -443,18 +446,21 @@ export default function Navigation() {
             >
               Câu chuyện
             </Link>
-            <Link
-              href={user ? ROUTES.dashboard : ROUTES.login}
-              onClick={() => setIsOpen(false)}
-              className={cn(
-                'block px-3 py-2.5 rounded-lg transition-colors',
-                isDashboard
-                  ? 'bg-surface-subtle text-ink font-semibold'
-                  : 'text-ink hover:bg-surface-muted'
-              )}
-            >
-              Sản phẩm
-            </Link>
+
+            {!isAdmin && (
+              <Link
+                href={user ? ROUTES.dashboard : ROUTES.login}
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  'block px-3 py-2.5 rounded-lg transition-colors',
+                  isDashboard
+                    ? 'bg-surface-subtle text-ink font-semibold'
+                    : 'text-ink hover:bg-surface-muted'
+                )}
+              >
+                Sản phẩm
+              </Link>
+            )}
             {isAdmin && (
               <Link
                 href={ROUTES.admin}
