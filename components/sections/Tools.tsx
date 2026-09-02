@@ -21,14 +21,14 @@ const tools = [
     highlight: '500+ cơ hội',
   },
   {
-    id: 'price',
-    title: 'So sánh giá thông minh',
+    id: 'price-smart',
+    title: 'Mua thông minh — phát hiện giá ảo',
     summary:
-      'So sánh giá Shopee, Lazada, Tiki, TikTok Shop kèm lịch sử 90 ngày. Phát hiện giá ảo, gợi ý thời điểm mua, cảnh báo shop rủi ro.',
-    href: '/tools/price-compare',
+      'Dán link Shopee, Lazada, Tiki, TikTok Shop. AI phân tích giá 4 sàn, lịch sử 30 ngày, gợi ý mua ngay hay đợi.',
+    href: '/tools/price-smart',
     cta: 'Mở công cụ',
-    bullets: ['Phát hiện giá ảo so với lịch sử', 'Gợi ý đợi X ngày giảm Y%', 'Tổng bill cuối (ship + voucher)'],
-    highlight: '5.000+ sản phẩm',
+    bullets: ['Phát hiện giá ảo thông minh', 'Gợi ý thời điểm mua tối ưu', 'So sánh 4 sàn + lịch sử 30 ngày'],
+    highlight: 'AI mới',
   },
 ];
 

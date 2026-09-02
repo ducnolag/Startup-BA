@@ -51,34 +51,19 @@ export const TOOLS: ToolEntry[] = [
     ],
   },
   {
-    id: 'price-compare',
-    slug: 'price-compare',
-    name: 'So sánh giá thông minh',
-    shortDescription: 'Lịch sử giá 90 ngày, phát hiện giá ảo',
+    id: 'price-smart',
+    slug: 'price-smart',
+    name: 'Mua thông minh',
+    shortDescription: 'So sánh giá 4 sàn, phát hiện giá ảo, gợi ý mua ngay',
     description:
-      'So sánh giá 4 sàn VN, lịch sử 90 ngày, phát hiện giá ảo, gợi ý thời điểm mua.',
-    href: '/tools/price-compare',
-    status: 'live',
-    stats: [
-      { value: '5K+', label: 'Sản phẩm' },
-      { value: '4', label: 'Sàn VN' },
-      { value: '90d', label: 'Lịch sử' },
-    ],
-  },
-  {
-    id: 'price-recommend',
-    slug: 'price-recommend',
-    name: 'Gợi ý giá AI',
-    shortDescription: 'Chatbot phân tích và khuyến nghị thời điểm mua',
-    description:
-      'Chatbot phân tích URL sản phẩm, khuyến nghị có nên mua ngay hay chờ giảm thêm.',
-    href: '/tools/price-recommend',
+      'Dán link sản phẩm → AI phân tích giá, so sánh 4 sàn, phát hiện giá ảo, gợi ý nên mua ngay hay chờ.',
+    href: '/tools/price-smart',
     status: 'live',
     isNew: true,
     stats: [
       { value: '4 sàn', label: 'So sánh' },
-      { value: '90d', label: 'Lịch sử' },
-      { value: 'AI', label: 'Tư vấn' },
+      { value: 'AI', label: 'Phân tích' },
+      { value: '0đ', label: 'Chi phí' },
     ],
   },
 ];
@@ -179,23 +164,62 @@ export const SEED_VOTES: VoteEntry[] = [
   },
 ];
 
-// ---------- Mock data cho chatbot Gợi ý giá ----------
+// ---------- Sample products cho AI demo ----------
 
 export const SAMPLE_PRODUCTS = [
-  'iPhone 15 Pro 256GB',
-  'MacBook Air M3 13"',
-  'Sony WH-1000XM5',
-  'Samsung Galaxy S24 Ultra',
-  'AirPods Pro 2',
-  'iPad Air M2 11"',
+  'Son môi 3CE',
+  'Máy rửa mặt Foreo Luna',
+  'Serum Vitamin C',
+  'Nồi cơm điện Philips',
+  'Máy lọc không khí Xiaomi',
+  'Đầm nữ dự tiệc',
+  'Áo khoác nữ dạ',
+  'Túi xách nữ da',
 ];
 
+// Platform detection (Shopee, Lazada, Tiki, TikTok Shop) — dùng cho parser
 export const PLATFORM_PATTERNS: Array<{ match: RegExp; name: string }> = [
   { match: /shopee\.vn/i, name: 'Shopee' },
   { match: /lazada\.vn/i, name: 'Lazada' },
   { match: /tiki\.vn/i, name: 'Tiki' },
   { match: /tiktok\.com|tiktok\.vn/i, name: 'TikTok Shop' },
 ];
+
+// ---------- Categories ưu tiên (Phase 1) ----------
+
+export type ProductCategory = 'lam-dep' | 'nha-cua-doi-song' | 'thoi-trang-nu';
+
+export const CATEGORIES: { id: ProductCategory; label: string; emoji: string; keywords: string[] }[] = [
+  {
+    id: 'lam-dep',
+    label: 'Làm đẹp',
+    emoji: '💄',
+    keywords: ['son', 'kem', 'serum', 'mặt', 'tóc', 'nail', 'mỹ phẩm', 'phấn', 'nước hoa', 'foreo', 'lancome', '3ce'],
+  },
+  {
+    id: 'nha-cua-doi-song',
+    label: 'Nhà cửa & Đời sống',
+    emoji: '🏠',
+    keywords: ['nồi', 'máy lọc', 'máy hút bụi', 'nệm', 'ga', 'gối', 'bát', 'đĩa', 'lock&lock', 'philips', 'xiaomi'],
+  },
+  {
+    id: 'thoi-trang-nu',
+    label: 'Thời trang nữ',
+    emoji: '👗',
+    keywords: ['đầm', 'váy', 'áo', 'quần', 'túi', 'giày', 'sandal', 'nữ', 'dạ', 'hạnh phúc', 'ivy moda'],
+  },
+];
+
+// ---------- Gemini API config ----------
+
+export const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY ?? '';
+// Antigravity endpoint cho free models (gemini-2.5-flash, gemma-3...)
+// Antigravity endpoint (Antigravity Gemini free) - alternative free tier
+export const GEMINI_MODEL = process.env.NEXT_PUBLIC_GEMINI_MODEL ?? 'gemini-2.5-flash';
+// Endpoint mặc định - dùng Google's official free endpoint
+export const GEMINI_ENDPOINT =
+  process.env.NEXT_PUBLIC_GEMINI_ENDPOINT ??
+  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // ---------- Vote / Survey CTA ----------
 // Khi có form khảo sát (Google Forms / Tally / Typeform...) thì dán link vào đây.

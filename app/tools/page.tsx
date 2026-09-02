@@ -18,7 +18,7 @@ const tools = TOOLS.map((t) => ({
   href: t.href,
   status: t.status,
   isNew: t.isNew,
-  ordinal: t.slug === 'scholarship' ? '1' : t.slug === 'price-compare' ? '2' : '3',
+  ordinal: t.slug === 'scholarship' ? '1' : '2',
   stats: t.stats,
 }));
 
