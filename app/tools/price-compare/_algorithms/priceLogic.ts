@@ -1,80 +1,35 @@
-// lib/algorithms.ts
+import { geminiModel } from '@/lib/gemini';
 
-export interface PriceHistory {
-  date: string;
-  price: number;       
-  originalPrice: number; 
-}
+export async function analyzeWithGemini(productName: string, currentPrice: number, originalPrice: number, history: any[]) {
+  // Trích xuất mảng giá 30 ngày để nạp cho Gemini
+  const priceHistoryStr = history.map(h => h.price).join(', ');
 
-export interface ShopData {
-  rating: number;       
-  isNewShop: boolean;   
-  returnRate: number;  
-  reviewCount: number;  
-}
-//Median
-function getMedian(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 !== 0 
-    ? sorted[mid] 
-    : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-export function detectFakeDiscount(currentOriginalPrice: number, history: PriceHistory[]): boolean {
-  if (history.length < 7) return false; 
+  const prompt = `
+    Bạn là trợ lý mua sắm AI. Hãy phân tích sản phẩm sau:
+    - Tên: ${productName}
+    - Giá hiện tại: ${currentPrice} VNĐ
+    - Giá gốc niêm yết: ${originalPrice} VNĐ
+    - Lịch sử giá 30 ngày qua: [${priceHistoryStr}]
 
-  const historicalOriginalPrices = history.map(h => h.originalPrice);
-  const medianOriginalPrice = getMedian(historicalOriginalPrices);
-  const differenceRatio = (currentOriginalPrice - medianOriginalPrice) / medianOriginalPrice;
-  
-  return differenceRatio > 0.15;
-}
-export type Recommendation = 'MUA NGAY' | 'ĐỢI THÊM' | 'GIÁ ĐANG CAO';
+    Nhiệm vụ:
+    1. So sánh giá hiện tại với lịch sử để xem có phải "giá ảo" (nâng giá gốc lên rồi sale giả) không.
+    2. Đưa ra lời khuyên cho người dùng (chỉ được chọn 1 trong 3 trạng thái: 'mua-ngay', 'doi-them', 'gia-ao').
+    
+    TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU:
+    {
+      "recommendation": "mua-ngay" | "doi-them" | "gia-ao",
+      "reason": "Giải thích lý do ngắn gọn dưới 25 chữ",
+      "isFakeSale": boolean
+    }
+  `;
 
-export function getBuyRecommendation(currentPrice: number, history: PriceHistory[]): { label: Recommendation, reason: string } {
-  if (history.length < 7) return { label: 'ĐỢI THÊM', reason: 'Chưa đủ dữ liệu lịch sử để phân tích.' };
-
-  const historicalPrices = history.map(h => h.price);
-  const medianPrice = getMedian(historicalPrices);
-  const minPrice = Math.min(...historicalPrices);
-
-  if (currentPrice <= minPrice) {
-    return { label: 'MUA NGAY', reason: 'Giá đang ở mức thấp nhất trong lịch sử 90 ngày qua.' };
+  try {
+    const result = await geminiModel.generateContent(prompt);
+    const textResponse = result.response.text();
+    return JSON.parse(textResponse);
+  } catch (error) {
+    console.error("Lỗi Gemini:", error);
+    // Fallback an toàn nếu API lỗi
+    return { recommendation: 'doi-them', reason: 'Hệ thống AI đang bận, vui lòng thử lại sau.', isFakeSale: false };
   }
-
-  if (currentPrice <= medianPrice * 0.95) {
-    return { label: 'MUA NGAY', reason: 'Giá đang tốt, thấp hơn mức trung bình của thị trường.' };
-  }
-
-  if (currentPrice > medianPrice) {
-    return { label: 'GIÁ ĐANG CAO', reason: 'Giá đang cao hơn trung bình. Nên đợi các đợt sale giữa/cuối tháng.' };
-  }
-
-  return { label: 'ĐỢI THÊM', reason: 'Giá đang ở mức bình thường, không có khuyến mãi đột phá.' };
-}
-// Tính tổng bill thực tế
-export function calculateRealCost(price: number, shippingFee: number, voucherDiscount: number): number {
-  const total = price + shippingFee - voucherDiscount;
-  return total > 0 ? total : 0; // Đảm bảo tổng bill không bị âm
-}
-
-//  Cảnh báo rủi ro Shop
-export function assessShopRisk(shop: ShopData): { isRisky: boolean, warnings: string[] } {
-  const warnings: string[] = [];
-  
-  if (shop.rating < 4.5 && shop.reviewCount > 50) {
-    warnings.push('Điểm đánh giá trung bình thấp.');
-  }
-  if (shop.isNewShop && shop.reviewCount < 10) {
-    warnings.push('Shop mới mở, chưa có nhiều độ uy tín.');
-  }
-  if (shop.returnRate > 10) {
-    warnings.push('Tỷ lệ hoàn trả/khiếu nại cao bất thường.');
-  }
-
-  return {
-    isRisky: warnings.length > 0,
-    warnings
-  };
 }
