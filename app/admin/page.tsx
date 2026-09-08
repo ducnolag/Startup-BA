@@ -409,10 +409,10 @@ function StatusRow({
   status: 'online' | 'warning' | 'offline';
   detail: string;
 }) {
-  const palette = {
-    online: 'bg-success/5 border-success/20 text-success bg-success/10',
-    warning: 'bg-warning/5 border-warning/20 text-warning bg-warning/10',
-    offline: 'bg-danger/5 border-danger/20 text-danger bg-danger/10',
+  const surfaceMap = {
+    online: 'bg-success/5 border-success/20',
+    warning: 'bg-warning/5 border-warning/20',
+    offline: 'bg-danger/5 border-danger/20',
   } as const;
   const labelMap = {
     online: 'Online',
@@ -421,15 +421,7 @@ function StatusRow({
   } as const;
 
   return (
-    <div
-      className={`flex items-center justify-between p-3 rounded-lg border ${
-        status === 'online'
-          ? 'bg-success/5 border-success/20'
-          : status === 'warning'
-          ? 'bg-warning/5 border-warning/20'
-          : 'bg-danger/5 border-danger/20'
-      }`}
-    >
+    <div className={`flex items-center justify-between p-3 rounded-lg border ${surfaceMap[status]}`}>
       <div>
         <div className="text-sm font-medium text-ink">{label}</div>
         <div className="text-[11px] text-ink-muted mt-0.5">{detail}</div>

@@ -86,25 +86,17 @@ cd D:\Startup-BA\commerce-agents-temp
 
 ---
 
-## 🚧 Còn lại
+## ✅ Đã hoàn thành
 
 ### A. Wire Vietnamese Agent vào Next.js (cần API key)
 
-Khi bạn có `ANTHROPIC_API_KEY`, ta sẽ:
+Đã ship:
 
-1. Tạo **FastAPI microservice** (Python) expose ShoppingAgent qua HTTP:
-   ```
-   POST /api/chat
-   Body: { message, session_id }
-   Returns: SSE stream với text_delta, tool_call, ui, cart_update
-   ```
+1. **Bridge Python** ở `commerce-agents-temp/bridge_vn.py` — subprocess wrapper, expose `POST /analyze` ở `127.0.0.1:8765`, timeout 180 s.
+2. **Next.js API route** `app/api/agent/analyze/route.ts` — proxy HTTP tới bridge, validate `input`, forward status upstream, 502 khi bridge down, timeout 180 s.
+3. **Hướng dẫn vận hành** trong `INTEGRATION_GUIDE.md` (cách start bridge + dev server, nơi đặt `ANTHROPIC_API_KEY`).
 
-2. Hoặc dùng **Next.js API route** gọi trực tiếp Messages API (Python không cần):
-   - Bypass Anthropic Agent SDK
-   - Gọi `anthropic.Anthropic().messages.stream()` với prompt + tools
-   - Implement StorefrontBackend trong TypeScript (1:1 từ backend_vn.py)
-
-Tôi recommend **option 2** cho đơn giản — gọi Messages API từ Next.js API route, copy prompt/skills từ commerce-agents. Sẽ đề xuất implement khi bạn có API key.
+Chỉ còn phụ thuộc operator: cung cấp `ANTHROPIC_API_KEY` trong `.env.local` (hoặc env của Python venv) để bridge trả về kết quả thật.
 
 ### B. Cập nhật `lib/price/*` hiện tại
 
