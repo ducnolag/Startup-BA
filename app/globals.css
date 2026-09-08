@@ -4,19 +4,22 @@
 
 @layer base {
   :root {
-    --bg-page: #ffffff;
-    --bg-muted: #f8fafc;
-    --bg-subtle: #f1f5f9;
-    --ink-primary: #0f172a;
-    --ink-secondary: #475569;
-    --ink-tertiary: #94a3b8;
-    --line: #e2e8f0;
-    --line-strong: #cbd5e1;
-    --brand: #00a8d4;
-    --brand-deep: #006c89;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
+    /* ── Precision Studio palette ── */
+    --bg-page: #fafaf9;
+    --bg-surface: #ffffff;
+    --bg-muted: #f7f6f3;
+    --bg-subtle: #f0efec;
+    --ink-primary: #18181b;
+    --ink-secondary: #71717a;
+    --ink-tertiary: #a1a1aa;
+    --brand: #2563eb;
+    --brand-deep: #1d4ed8;
+    --depth: #7c3aed;
+    --line: #e4e4e7;
+    --line-strong: #d4d4d8;
+    --success: #16a34a;
+    --warning: #ca8a04;
+    --danger: #dc2626;
   }
 
   * {
@@ -25,6 +28,12 @@
   }
 
   html {
+    /* Tell the UA to render controls, scrollbars and form widgets in light scheme
+       even when the OS prefers dark. The app is intentionally a light-only design
+       system (warm off-white) — forcing color-scheme: light prevents native
+       dark widgets (date pickers, scrollbars, autofill) from clashing with
+       the light palette. */
+    color-scheme: light;
     scroll-behavior: smooth;
     background: var(--bg-page);
     color: var(--ink-primary);
@@ -38,365 +47,224 @@
     text-rendering: optimizeLegibility;
   }
 
-  ::selection {
-    background: rgba(0, 168, 212, 0.18);
-    color: var(--ink-primary);
-  }
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-muted); }
+  ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 4px; border: 2px solid var(--bg-muted); }
+  ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
 
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--bg-muted);
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--line-strong);
-    border-radius: 6px;
-    border: 2px solid var(--bg-muted);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-  }
+  /* Text selection */
+  ::selection { background: rgba(37, 99, 235, 0.15); color: var(--ink-primary); }
 }
 
 @layer components {
-  /* Primary CTA — solid brand color */
+  /* ── Button system ── */
   .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: var(--ink-primary);
-    color: #ffffff;
-    font-weight: 600;
-    border-radius: 999px;
-    transition: all 0.2s ease;
-    font-size: 0.9375rem;
-    line-height: 1.25rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.6875rem 1.375rem;
+    background: var(--ink-primary); color: #ffffff;
+    font-weight: 600; border-radius: 999px;
+    transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+    font-size: 0.9375rem; line-height: 1.25rem;
+    letter-spacing: -0.01em;
   }
   .btn-primary:hover {
-    background: #1e293b;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    background: #27272a; transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
   }
-  .btn-primary:active {
-    transform: translateY(0);
-    background: #0a1322;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15) inset;
-  }
-  .btn-primary:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 3px;
-  }
+  .btn-primary:active { transform: translateY(0); box-shadow: none; }
+  .btn-primary:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 
   .btn-brand {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: var(--brand);
-    color: #ffffff;
-    font-weight: 600;
-    border-radius: 999px;
-    transition: all 0.2s ease;
-    font-size: 0.9375rem;
-    line-height: 1.25rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.6875rem 1.375rem;
+    background: var(--brand); color: #ffffff;
+    font-weight: 600; border-radius: 999px;
+    transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+    font-size: 0.9375rem; line-height: 1.25rem;
+    letter-spacing: -0.01em;
   }
   .btn-brand:hover {
-    background: var(--brand-deep);
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(0, 168, 212, 0.25);
+    background: var(--brand-deep); transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(37,99,235,0.30);
   }
+  .btn-brand:active { transform: translateY(0); box-shadow: none; }
 
-  /* Ghost / secondary button */
   .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: transparent;
-    color: var(--ink-primary);
-    font-weight: 600;
-    border: 1px solid var(--line);
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.6875rem 1.375rem;
+    background: transparent; color: var(--ink-primary);
+    font-weight: 600; border: 1px solid var(--line);
     border-radius: 999px;
-    transition: all 0.2s ease;
-    font-size: 0.9375rem;
-    line-height: 1.25rem;
+    transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+    font-size: 0.9375rem; line-height: 1.25rem;
   }
-  .btn-ghost:hover {
-    background: var(--bg-muted);
-    border-color: var(--line-strong);
-  }
-  .btn-ghost:active {
-    background: var(--bg-muted);
-    transform: scale(0.98);
-  }
-  .btn-ghost:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 3px;
-  }
+  .btn-ghost:hover { background: var(--bg-subtle); border-color: var(--line-strong); }
+  .btn-ghost:active { background: var(--bg-muted); transform: scale(0.98); }
+  .btn-ghost:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 
-  /* Card — clean, professional e-commerce style */
+  /* ── Card system — refined, no harsh borders ── */
   .card {
     background: #ffffff;
     border: 1px solid var(--line);
-    border-radius: 16px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    border-radius: 1.25rem; /* 20px */
+    transition: border-color 0.2s ease, box-shadow 0.25s cubic-bezier(0.16,1,0.3,1), transform 0.25s cubic-bezier(0.16,1,0.3,1);
   }
   .card-hover:hover {
     border-color: var(--line-strong);
-    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04);
     transform: translateY(-2px);
   }
 
-  /* Soft / inset card */
+  /* Soft inset card */
   .card-soft {
     background: var(--bg-subtle);
     border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: 1rem;
   }
 
-  /* Eyebrow tag — small uppercase label */
+  /* ── Accent border — subtle top line, not full gradient border ── */
+  .card-accent {
+    position: relative;
+    overflow: hidden;
+  }
+  .card-accent::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--brand), var(--depth));
+    border-radius: 1.25rem 1.25rem 0 0;
+  }
+
+  /* ── Eyebrow label ── */
   .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--brand-deep);
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--brand);
   }
 
-  /* Input field */
+  /* ── Input field ── */
   .input-field {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    background: #ffffff;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    color: var(--ink-primary);
+    width: 100%; padding: 0.75rem 1rem;
+    background: #ffffff; border: 1px solid var(--line);
+    border-radius: 0.75rem; color: var(--ink-primary);
     font-size: 0.9375rem;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .input-field:focus {
-    outline: none;
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px rgba(0, 168, 212, 0.12);
+    outline: none; border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
   }
-  .input-field::placeholder {
-    color: var(--ink-tertiary);
-  }
+  .input-field::placeholder { color: var(--ink-tertiary); }
 
-  /* Pill / chip — for filters, tags */
+  /* ── Chip / pill ── */
   .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.875rem;
-    border-radius: 999px;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    background: #ffffff;
-    border: 1px solid var(--line);
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.375rem 0.875rem; border-radius: 999px;
+    font-size: 0.8125rem; font-weight: 500;
+    background: #ffffff; border: 1px solid var(--line);
     color: var(--ink-secondary);
-    transition: all 0.15s ease;
-    cursor: pointer;
+    transition: all 0.15s ease; cursor: pointer;
   }
-  .chip:hover {
-    border-color: var(--line-strong);
-    color: var(--ink-primary);
-  }
-  .chip-active {
-    background: var(--ink-primary);
-    border-color: var(--ink-primary);
-    color: #ffffff;
-  }
-  .chip-active:hover {
-    color: #ffffff;
-  }
+  .chip:hover { border-color: var(--line-strong); color: var(--ink-primary); }
+  .chip-active { background: var(--ink-primary); border-color: var(--ink-primary); color: #ffffff; }
+  .chip-active:hover { color: #ffffff; }
+  .chip-brand { background: rgba(37,99,235,0.08); border-color: rgba(37,99,235,0.2); color: var(--brand); }
 
-  /* Status dot */
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: var(--success);
-    flex-shrink: 0;
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     Logo Marquee — Infinite auto-sliding ticker
-     ═══════════════════════════════════════════════════════ */
+  /* ── Logo marquee ── */
   .logo-marquee-container {
-    overflow: hidden;
-    padding: 16px 0;
-    position: relative;
-    /* Fade edges */
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black 10%,
-      black 90%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black 10%,
-      black 90%,
-      transparent 100%
-    );
+    overflow: hidden; padding: 1rem 0; position: relative;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
   }
-
   .logo-marquee {
-    display: flex;
-    width: max-content;
+    display: flex; width: max-content;
     animation: marquee-scroll 35s linear infinite;
-    will-change: transform;
-    backface-visibility: hidden;
+    will-change: transform; backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
-
-  .logo-marquee:hover {
-    animation-play-state: paused;
-  }
-
+  .logo-marquee:hover { animation-play-state: paused; }
   .logo-marquee-item {
-    flex-shrink: 0;
-    padding: 8px 32px;
-    cursor: pointer;
+    flex-shrink: 0; padding: 0.5rem 2rem; cursor: pointer;
     transition: transform 0.2s ease;
   }
+  .logo-marquee-item:hover { transform: scale(1.08); }
 
-  .logo-marquee-item:hover {
-    transform: scale(1.1);
-  }
+  /* ── 3D tilt ── */
+  .card-3d-tilt { transform-style: preserve-3d; will-change: transform; }
 
-  .logo-marquee-item:hover span {
-    opacity: 1 !important;
-  }
+  /* ── Scroll-reveal ── */
+  .reveal-line { display: block; transform-origin: left center; }
 
-  /* ═══════════════════════════════════════════════════════
-     3D Tilt Card utility
-     ═══════════════════════════════════════════════════════ */
-  .card-3d-tilt {
-    transform-style: preserve-3d;
-    will-change: transform;
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     Scroll-reveal section titles
-     ═══════════════════════════════════════════════════════ */
-  .reveal-line {
-    display: block;
-    transform-origin: left center;
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     Gradient border animation on hover
-     ═══════════════════════════════════════════════════════ */
-  .card-gradient-border {
+  /* ── Noise texture overlay ── */
+  .noise-texture {
     position: relative;
-    overflow: hidden;
   }
-
-  .card-gradient-border::before {
+  .noise-texture::after {
     content: '';
-    position: absolute;
-    inset: 0;
-    padding: 1px;
-    border-radius: 16px;
-    background: linear-gradient(
-      135deg,
-      transparent 30%,
-      var(--brand) 50%,
-      transparent 70%
-    );
-    background-size: 200% 200%;
-    -webkit-mask:
-      linear-gradient(#fff 0 0) content-box,
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    pointer-events: none;
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    border-radius: inherit;
   }
 
-  .card-gradient-border:hover::before {
-    opacity: 1;
-    animation: gradient-border-shift 2s linear infinite;
-  }
-
-  /* ═══════════════════════════════════════════════════════
-     Counter animation container
-     ═══════════════════════════════════════════════════════ */
-  .counter-value {
-    display: inline-block;
-    font-variant-numeric: tabular-nums;
+  /* ── Glass card ── */
+  .glass-card {
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8);
   }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-  .text-pretty {
-    text-wrap: pretty;
-  }
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .container-page {
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    max-width: 1200px; margin-left: auto; margin-right: auto;
+    padding-left: 1.5rem; padding-right: 1.5rem;
   }
   @media (min-width: 768px) {
-    .container-page {
-      padding-left: 2rem;
-      padding-right: 2rem;
-    }
+    .container-page { padding-left: 2rem; padding-right: 2rem; }
   }
 
-  /* 3D perspective context */
-  .perspective-1200 {
-    perspective: 1200px;
+  /* ── Layered depth utilities ── */
+  .perspective-1200 { perspective: 1200px; }
+  .perspective-800 { perspective: 800px; }
+
+  /* ── Grain texture ── */
+  .grain {
+    position: relative;
   }
-  .perspective-800 {
-    perspective: 800px;
+  .grain::before {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.025'/%3E%3C/svg%3E");
+    opacity: 0.5;
+    z-index: 1;
+  }
+
+  /* ── Accent underline ── */
+  .accent-underline {
+    position: relative; display: inline-block;
+  }
+  .accent-underline::after {
+    content: '';
+    position: absolute; bottom: -2px; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--brand), var(--depth));
+    border-radius: 1px;
   }
 }
 
-/* ===== Keyframes (must be outside @layer) ===== */
-
-/* Logo marquee — seamless infinite scroll */
+/* ── Keyframes ── */
 @keyframes marquee-scroll {
-  0% {
-    transform: translate3d(0, 0, 0);
-  }
-  100% {
-    transform: translate3d(-50%, 0, 0);
-  }
+  0% { transform: translate3d(0,0,0); }
+  100% { transform: translate3d(-50%,0,0); }
 }
-
-/* Legacy slicer — kept for backward compat */
-@keyframes slicer {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
 @keyframes float1 {
   0%, 100% { transform: translateY(0) translateX(0) scale(1); }
   33% { transform: translateY(-18px) translateX(6px) scale(1.04); }
@@ -407,90 +275,42 @@
   40% { transform: translateY(-24px) translateX(10px) rotate(4deg); }
   70% { transform: translateY(-12px) translateX(-6px) rotate(-2deg); }
 }
-@keyframes float3 {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-20px) scale(1.06); }
+@keyframes orb1 {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(40px,-30px) scale(1.05); }
+  66% { transform: translate(-20px,20px) scale(0.97); }
 }
-@keyframes floatOrb1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(40px, -30px) scale(1.05); }
-  66% { transform: translate(-20px, 20px) scale(0.95); }
+@keyframes orb2 {
+  0%, 100% { transform: translate(0,0) scale(1); }
+  50% { transform: translate(-50px,-40px) scale(1.1); }
 }
-@keyframes floatOrb2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-50px, -40px) scale(1.1); }
-}
-
-/* Gradient border shift */
 @keyframes gradient-border-shift {
   0% { background-position: 0% 0%; }
   50% { background-position: 100% 100%; }
   100% { background-position: 0% 0%; }
 }
-
-/* Chart line draw animation */
 @keyframes line-draw {
   0% { stroke-dashoffset: 400; }
   100% { stroke-dashoffset: 0; }
 }
-
 .chart-line-draw {
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
-  animation: line-draw 2s ease-out forwards;
-  animation-delay: 0.5s;
+  stroke-dasharray: 400; stroke-dashoffset: 400;
+  animation: line-draw 2s ease-out forwards; animation-delay: 0.5s;
 }
 
-/* ===== Reveal animation for data-anim elements ===== */
+/* Scroll reveal */
 [data-anim] {
-  opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
   will-change: opacity, transform;
 }
-[data-anim].is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+[data-anim].is-visible { opacity: 1; transform: translateY(0); }
 
-/* ===== Slicer overlay reveal ===== */
-[data-slicer] {
-  position: relative;
-  overflow: hidden;
-}
-[data-slicer]::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    100deg,
-    transparent 30%,
-    rgba(255, 255, 255, 0.6) 50%,
-    transparent 70%
-  );
-  transform: translateX(-100%);
-  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
-  z-index: 1;
-}
-[data-slicer].is-visible::before {
-  transform: translateX(100%);
-}
-
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; scroll-behavior: auto !important;
   }
-
-  /* Bắt buộc marquee vẫn chạy dẫu OS có tắt hiệu ứng */
-  .logo-marquee {
-    animation-duration: 35s !important;
-    animation-iteration-count: infinite !important;
-  }
+  .logo-marquee { animation-duration: 35s !important; animation-iteration-count: infinite !important; }
 }

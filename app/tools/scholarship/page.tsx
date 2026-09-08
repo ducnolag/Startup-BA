@@ -94,8 +94,19 @@ export default function ScholarshipPage() {
       <Navigation />
 
       {/* Header */}
-      <section ref={sectionRef} className="pt-32 md:pt-40 pb-12 bg-surface-muted border-b border-line">
-        <div className="container-page">
+      <section
+        ref={sectionRef}
+        className="pt-32 md:pt-40 pb-12 bg-surface-muted border-b border-line-subtle relative overflow-hidden"
+      >
+        <div
+          className="absolute inset-0 pointer-events-none opacity-50"
+          style={{
+            background:
+              'radial-gradient(ellipse 60% 40% at 50% 0%, rgba(124,58,237,0.05) 0%, transparent 60%)',
+          }}
+          aria-hidden
+        />
+        <div className="container-page relative">
           <div data-anim className="eyebrow mb-5">
             Tool #1 · Học bổng & Khóa học
           </div>
@@ -108,7 +119,9 @@ export default function ScholarshipPage() {
               lineHeight: 1.05,
             }}
           >
-            Săn học bổng quốc tế. Không bỏ lỡ deadline.
+            Săn học bổng quốc tế.
+            <br />
+            <span className="text-ink-muted font-medium">Không bỏ lỡ deadline.</span>
           </h1>
           <p data-anim className="mt-5 text-ink-muted max-w-2xl leading-relaxed">
             {stats.live} cơ hội từ {stats.countries} quốc gia ·{' '}
@@ -116,7 +129,7 @@ export default function ScholarshipPage() {
             30 ngày.
           </p>
 
-          <div data-anim className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-px bg-line rounded-2xl overflow-hidden border border-line">
+          <div data-anim className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCell value={stats.live} label="Cơ hội" />
             <StatCell value={stats.countries} label="Quốc gia" />
             <StatCell value={stats.fullFunded} label="Toàn phần" />
@@ -136,6 +149,7 @@ export default function ScholarshipPage() {
                 placeholder="Tìm theo tên, nhà cung cấp, ngành..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                aria-label="Tìm kiếm học bổng"
                 className="input-field pl-10"
               />
             </div>
@@ -249,11 +263,23 @@ function StatCell({
   highlight?: boolean;
 }) {
   return (
-    <div className={`bg-white p-5 ${highlight ? 'bg-surface-subtle' : ''}`}>
-      <div className="text-xs font-semibold uppercase tracking-wider text-ink-subtle mb-1">
+    <div
+      className={`card p-5 relative overflow-hidden ${
+        highlight ? 'border-brand/20' : ''
+      }`}
+    >
+      {highlight && (
+        <div
+          className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand to-depth"
+          aria-hidden
+        />
+      )}
+      <div className="text-[11px] font-mono font-medium text-ink-subtle uppercase tracking-wider mb-1.5">
         {label}
       </div>
-      <div className="font-display text-2xl md:text-3xl font-bold text-ink">{value}</div>
+      <div className="font-display text-2xl md:text-3xl font-bold text-ink tracking-tight">
+        {value}
+      </div>
     </div>
   );
 }
@@ -281,8 +307,14 @@ function ScholarshipCard({ item, onClick }: { item: Scholarship; onClick: () => 
   return (
     <button
       onClick={onClick}
-      className="card card-hover p-5 md:p-6 text-left w-full group"
+      className="group relative card p-5 md:p-6 text-left w-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover"
     >
+      {/* Subtle top accent line on hover */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand to-depth opacity-0 group-hover:opacity-100 transition-opacity"
+        aria-hidden
+      />
+
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2 text-xs text-ink-muted">
           <span className="text-xl">{item.flag}</span>
@@ -291,9 +323,7 @@ function ScholarshipCard({ item, onClick }: { item: Scholarship; onClick: () => 
         {item.matchScore && (
           <span
             className={`chip ${
-              item.matchScore >= 85
-                ? 'chip-active'
-                : ''
+              item.matchScore >= 85 ? 'chip-brand' : ''
             } text-[10px]`}
           >
             MATCH {item.matchScore}%
@@ -317,7 +347,7 @@ function ScholarshipCard({ item, onClick }: { item: Scholarship; onClick: () => 
         ))}
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-line">
+      <div className="flex items-center justify-between pt-4 border-t border-line-subtle">
         <div>
           <div className="text-[10px] text-ink-subtle uppercase tracking-wider mb-0.5">
             Giá trị

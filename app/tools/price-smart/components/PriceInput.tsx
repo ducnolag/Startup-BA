@@ -44,6 +44,7 @@ export default function PriceInput({ onAnalyze, isLoading, onDemo }: Props) {
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             placeholder="Dán link Shopee, Lazada, Tiki... hoặc gõ tên sản phẩm"
+            aria-label="Nhập link hoặc tên sản phẩm cần phân tích giá"
             className="flex-1 bg-transparent text-ink placeholder:text-ink-tertiary outline-none text-[15px] tracking-tight"
             disabled={isLoading}
           />
@@ -91,7 +92,7 @@ export default function PriceInput({ onAnalyze, isLoading, onDemo }: Props) {
             <button
               onClick={onDemo}
               disabled={isLoading}
-              className="text-xs text-brand-deep hover:text-ink px-3 py-1.5 rounded-full font-semibold disabled:opacity-50"
+              className="text-xs text-brand-700 hover:text-ink px-3 py-1.5 rounded-full font-semibold disabled:opacity-50"
             >
               Xem bản demo →
             </button>
