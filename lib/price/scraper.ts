@@ -11,6 +11,8 @@ import { GEMINI_API_KEY, GEMINI_MODEL, GEMINI_ENDPOINT } from '../constants';
 import { generateMockProduct, getProductBySlug, findProductByKeyword } from './data';
 import { parseProductFromUrl, isUrl } from './parser';
 import { createServiceSupabase } from '../supabase';
+import { vnBackend } from '../storefront/vn-backend';
+import type { Product as VnProduct, ProductDetails, StorePrices } from '../storefront/vn-backend';
 import type { ProductRecord, Platform, StorePrice, Category } from './types';
 
 export type LivePriceSource = 'shopee' | 'lazada' | 'tiki' | 'tiktok' | 'cache' | 'catalog' | 'mock';
@@ -329,6 +331,168 @@ function buildProductFromGemini(
 }
 
 // =====================================================================
+// Bridge: convert vnBackend Product → ProductRecord for lib/price consumers
+// =====================================================================
+
+const VN_CATEGORY_MAP: Record<string, Category> = {
+  'Điện thoại': 'nha-cua-doi-song',
+  'Điện thoại thông minh': 'nha-cua-doi-song',
+  Laptop: 'nha-cua-doi-song',
+  'Máy tính bảng': 'nha-cua-doi-song',
+  'Đồng hồ thông minh': 'nha-cua-doi-song',
+  'Phụ kiện': 'nha-cua-doi-song',
+  'Ổ cứng': 'nha-cua-doi-song',
+  'Thời trang': 'thoi-trang-nu',
+  Sách: 'thoi-trang-nu',
+};
+
+const VN_GRADIENT: [string, string] = ['#e3f2fd', '#bbdefb'];
+const VN_EMOJI = '🛒';
+
+/** 30-day price history with mean-reverting random walk, deterministic per seed. */
+function generateVnHistory(
+  basePrice: number,
+  lowest: number,
+  highest: number,
+  seed: number
+): number[] {
+  let s = seed | 0;
+  const rand = () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const out: number[] = [];
+  let p = basePrice * (0.95 + rand() * 0.1);
+  for (let i = 0; i < 30; i++) {
+    const reversion = (basePrice - p) * 0.08;
+    const noise = (rand() - 0.5) * basePrice * 0.025;
+    p = p + reversion + noise;
+    p = Math.max(lowest * 0.95, Math.min(highest * 1.05, p));
+    out.push(Math.round(p));
+  }
+  out[29] = basePrice;
+  return out;
+}
+
+function storePricesToStores(prices: StorePrices): StorePrice[] {
+  const order: Array<{ name: Platform; key: keyof StorePrices }> = [
+    { name: 'Shopee', key: 'shopee' },
+    { name: 'Lazada', key: 'lazada' },
+    { name: 'Tiki', key: 'tiki' },
+    { name: 'TikTok Shop', key: 'tiktok' },
+  ];
+  return order.map(({ name, key }) => ({
+    name,
+    price: prices[key],
+    inStock: true,
+    shipping: 0,
+  }));
+}
+
+function nameToSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60);
+}
+
+/**
+ * Build a ProductRecord from a vnBackend Product (light summary) + optional details.
+ * If details are supplied we use them for store_prices / description.
+ */
+function buildProductFromVnBackend(
+  p: VnProduct,
+  details?: ProductDetails | null
+): ProductRecord {
+  const storePrices: StorePrices =
+    details?.store_prices ??
+    ({
+      shopee: p.price,
+      lazada: p.price,
+      tiki: p.price,
+      tiktok: p.price,
+    } as StorePrices);
+
+  const prices = Object.values(storePrices);
+  const lowestPrice = Math.min(...prices);
+  const highestPrice = Math.max(...prices);
+  const averagePrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+
+  // 30-day price history seeded by product_id
+  const seed = [...p.product_id].reduce((h, c) => ((h << 5) + h + c.charCodeAt(0)) | 0, 5381);
+  const history = generateVnHistory(p.price, lowestPrice, highestPrice, Math.abs(seed));
+
+  const originalPrice = p.original_price ?? Math.round(p.price * 1.2);
+  const discountPct = Math.round((1 - p.price / originalPrice) * 100);
+  const diffVsAvg = ((p.price - averagePrice) / averagePrice) * 100;
+
+  let recommendation: ProductRecord['recommendation'] = 'doi-them';
+  let reason = `Giá ổn định quanh mức trung bình 4 sàn (${Math.round(diffVsAvg)}%).`;
+  if (p.price <= averagePrice * 0.95) {
+    recommendation = 'mua-ngay';
+    reason = `Giá thấp hơn ${Math.abs(Math.round(diffVsAvg))}% so với trung bình 4 sàn.`;
+  } else if (p.price >= averagePrice * 1.08) {
+    recommendation = 'gia-ao';
+    reason = `Giá cao hơn ${Math.round(diffVsAvg)}% so với trung bình 4 sàn. Cân nhắc đợi sale.`;
+  }
+  if (discountPct >= 15) {
+    reason += ` Đang giảm ${discountPct}% so với giá gốc.`;
+  }
+
+  const category = VN_CATEGORY_MAP[p.category ?? ''] ?? 'nha-cua-doi-song';
+
+  return {
+    id: `vn_${p.product_id}`,
+    slug: nameToSlug(p.title),
+    name: p.title,
+    brand: p.brand ?? 'Toolify.vn',
+    category,
+    image: VN_EMOJI,
+    imageUrl: p.image_url ?? '',
+    gradient: VN_GRADIENT,
+    currentPrice: p.price,
+    originalPrice,
+    lowestPrice,
+    highestPrice,
+    averagePrice,
+    rating: p.rating ?? 4.5,
+    reviewCount: p.review_count ?? 0,
+    history,
+    stores: storePricesToStores(storePrices),
+    recommendation,
+    reason,
+    description:
+      details?.short_description ??
+      p.short_description ??
+      `Sản phẩm chính hãng trên 4 sàn TMĐT VN. Cập nhật ${new Date().toLocaleDateString('vi-VN')}.`,
+    matchKeywords: [
+      ...(p.title.toLowerCase().split(/\s+/).filter((w) => w.length >= 3)),
+      ...(p.labels ?? []).map((l) => l.toLowerCase()),
+      p.product_id,
+    ],
+    discountPct: discountPct > 0 ? discountPct : undefined,
+  };
+}
+
+/**
+ * Try to resolve `query` against the vnBackend catalog (18 Vietnamese products).
+ * Returns null if nothing matches.
+ */
+export function findVnBackendProduct(query: string): ProductRecord | null {
+  const hits = vnBackend.searchProducts(query, null, 1);
+  if (!hits.length) return null;
+  const details = vnBackend.getProduct(hits[0].product_id);
+  return buildProductFromVnBackend(hits[0], details);
+}
+
+// =====================================================================
 // Main API
 // =====================================================================
 
@@ -338,7 +502,8 @@ function buildProductFromGemini(
  *   1. Catalog (nếu match chính xác)
  *   2. Cache Supabase (24h TTL)
  *   3. Gemini Search Grounding (real-time)
- *   4. Mock (fallback cuối)
+ *   4. VN Storefront catalog (18 sản phẩm VN, 4 sàn)
+ *   5. Mock (fallback cuối)
  */
 export async function fetchLivePrice(input: string): Promise<LivePriceResult> {
   // 1) Parse input
@@ -395,7 +560,19 @@ export async function fetchLivePrice(input: string): Promise<LivePriceResult> {
     return result;
   }
 
-  // 5) Fallback to mock
+  // 5) Try VN storefront backend (real 18-product catalog)
+  const vnMatch = findVnBackendProduct(searchKey);
+  if (vnMatch) {
+    return {
+      product: vnMatch,
+      sources: [],
+      confidence: 'medium',
+      isLiveData: false,
+      errorMessage: 'Hiển thị giá từ catalog VN (4 sàn). Dữ liệu không phải real-time.',
+    };
+  }
+
+  // 6) Fallback to mock
   return {
     product: generateMockProduct(searchKey, parsed.platform),
     sources: [],
