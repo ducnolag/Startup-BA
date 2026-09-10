@@ -5,6 +5,11 @@
 // All prices in VND. Module-level Map drives per-session cart storage.
 //
 // Source of truth: D:\Startup-BA\commerce-agents-temp\backend_vn.py
+//
+// Extended for commerce-agents integration:
+// - Added UserPreferences, FulfillmentOption, ShoppingSessionContext interfaces
+// - Added 5 missing methods: get_preferences, get_account_context, search_policies,
+//   get_fulfillment_options, update_cart_item
 // =====================================================================
 
 // ---------------------------------------------------------------------
@@ -12,6 +17,36 @@
 // ---------------------------------------------------------------------
 
 export type PlatformKey = 'shopee' | 'lazada' | 'tiki' | 'tiktok';
+
+// Session context for commerce-agents integration
+export interface PageContext {
+  page_type: 'home' | 'search' | 'product' | 'cart' | 'orders' | 'other';
+  product_id?: string | null;
+  query?: string | null;
+}
+
+export interface ShoppingSessionContext {
+  session_id: string;
+  user_id: string;
+  page: PageContext;
+}
+
+export interface UserPreferences {
+  user_id: string;
+  display_name?: string | null;
+  loyalty_tier?: string | null;
+  default_location?: string | null;
+  currency?: string;
+  language?: string;
+  preferences: Record<string, string>;
+}
+
+export interface FulfillmentOption {
+  method: 'delivery' | 'pickup' | 'shipping';
+  eta: string;
+  fee: number;
+  location?: string | null;
+}
 
 export interface StorePrices {
   shopee: number;
@@ -47,6 +82,13 @@ export interface SearchFilters {
   min_price?: number;
   max_price?: number;
   category?: string;
+  brand?: string;
+  rating_min?: number;
+  sort_by?: 'relevancy' | 'price_asc' | 'price_desc' | 'rating';
+  // Extended fields for commerce-agents
+  min_rating?: number;
+  attributes?: Record<string, string>;
+  sort?: 'relevance' | 'price_asc' | 'price_desc' | 'rating';
 }
 
 export interface CartItem {
@@ -944,6 +986,197 @@ export class VNStorefrontBackend {
     const lines = this.carts.get(sessionId);
     if (lines) lines.delete(productId);
     return recomputeCart(lines ? [...lines.values()] : []);
+  }
+
+  // ---- Commerce-agents integration: cart item update ----
+
+  /**
+   * Set a line to a specific quantity (1 to max_quantity_per_item).
+   * If quantity = 0, remove the item from cart.
+   * If product not in cart, leave cart unchanged.
+   * @throws Error if product_id not found in catalog or out of stock.
+   */
+  updateCartItem(sessionId: string, productId: string, quantity: number): Cart {
+    // If quantity is 0, treat as remove
+    if (quantity <= 0) {
+      return this.removeFromCart(sessionId, productId);
+    }
+
+    const entry = this.products.get(productId);
+    if (!entry) throw new Error(`Unknown product_id: ${productId}`);
+    if (!entry.in_stock) throw new Error(`Sản phẩm '${entry.title}' hiện hết hàng.`);
+
+    const lines = this.getOrCreateCartLines(sessionId);
+    lines.set(productId, {
+      product_id: entry.product_id,
+      title: entry.title,
+      price: entry.price,
+      quantity,
+      image_url: entry.image_url,
+    });
+    return recomputeCart([...lines.values()]);
+  }
+
+  // ---- Commerce-agents integration: preferences ----
+
+  /**
+   * Read the customer's location, currency, language, and shopping style.
+   * @param session - Shopping session context (session_id used for user identification)
+   * @returns UserPreferences for the session
+   */
+  getPreferences(session: ShoppingSessionContext): UserPreferences {
+    // For anonymous sessions, return default VN preferences
+    const isAnonymous = session.user_id === 'anonymous' || session.user_id === session.session_id;
+    return {
+      user_id: session.user_id,
+      display_name: isAnonymous ? null : null, // TODO: wire Supabase auth
+      loyalty_tier: 'standard',
+      default_location: 'VN',
+      currency: 'VND',
+      language: 'vi',
+      preferences: {
+        location: 'VN',
+        currency: 'VND',
+        language: 'vi',
+        // Shopping style defaults
+        price_sensitivity: 'medium',
+        brand_preference: '',
+      },
+    };
+  }
+
+  /**
+   * Return account metadata for the session.
+   * @param session - Shopping session context
+   * @returns Account context dict or null if not authenticated
+   */
+  getAccountContext(session: ShoppingSessionContext): Record<string, string> | null {
+    // TODO: wire Supabase auth to get real account context
+    // For MVP, return null (no account model)
+    return null;
+  }
+
+  // ---- Commerce-agents integration: policy search ----
+
+  /**
+   * Search policies by keyword (return windows, refund timing, shipping).
+   * Different from getPolicies() which returns all policies.
+   * @param session - Shopping session context (unused for MVP)
+   * @param query - Search query to match against policy title and content
+   * @returns Array of matching policies
+   */
+  searchPolicies(session: ShoppingSessionContext, query: string): Policy[] {
+    if (!query || !query.trim()) {
+      return [...POLICIES];
+    }
+    const q = query.toLowerCase();
+    return POLICIES.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p.content ?? '').toLowerCase().includes(q)
+    );
+  }
+
+  // ---- Commerce-agents integration: fulfillment options ----
+
+  /**
+   * Return delivery options for the given products.
+   * Mock data for MVP: standard (2-5 days), express (1-2 days), instant (same-day).
+   * @param session - Shopping session context (unused for MVP)
+   * @param productIds - Array of product IDs to get fulfillment options for
+   * @returns Array of fulfillment options
+   */
+  getFulfillmentOptions(session: ShoppingSessionContext, productIds: string[]): FulfillmentOption[] {
+    // Filter to known product IDs
+    const validIds = productIds.filter((id) => this.products.has(id));
+
+    if (validIds.length === 0) {
+      return [];
+    }
+
+    // VN fulfillment mock data
+    const options: FulfillmentOption[] = [
+      {
+        method: 'delivery',
+        eta: '2-5 ngày làm việc',
+        fee: 0,
+        location: 'Toàn quốc',
+      },
+      {
+        method: 'delivery',
+        eta: '1-2 ngày làm việc',
+        fee: 25000,
+        location: 'Nội thành HCM/HN',
+      },
+    ];
+
+    // Only offer instant delivery for small/light items
+    const instantEligible = validIds.every((id) => {
+      const entry = this.products.get(id);
+      // Items that could be instant delivery eligible
+      const instantCategories = ['Phụ kiện', 'Sách', 'Thời trang'];
+      return entry && instantCategories.includes(entry.category);
+    });
+
+    if (instantEligible) {
+      options.push({
+        method: 'delivery',
+        eta: 'Giao trong 2 giờ',
+        fee: 45000,
+        location: 'Nội thành HCM/HN',
+      });
+    }
+
+    return options;
+  }
+
+  // ---- Legacy async wrappers for commerce-agents compatibility ----
+
+  /**
+   * Async wrapper for getCart - maintains compatibility with commerce-agents ABC
+   */
+  async getCartAsync(session: ShoppingSessionContext): Promise<Cart> {
+    return this.getCart(session.session_id);
+  }
+
+  /**
+   * Async wrapper for addToCart - maintains compatibility with commerce-agents ABC
+   */
+  async addToCartAsync(session: ShoppingSessionContext, productId: string, quantity: number): Promise<Cart> {
+    return this.addToCart(session.session_id, productId, quantity);
+  }
+
+  /**
+   * Async wrapper for updateCartItem - maintains compatibility with commerce-agents ABC
+   */
+  async updateCartItemAsync(session: ShoppingSessionContext, productId: string, quantity: number): Promise<Cart> {
+    return this.updateCartItem(session.session_id, productId, quantity);
+  }
+
+  /**
+   * Async wrapper for removeFromCart - maintains compatibility with commerce-agents ABC
+   */
+  async removeFromCartAsync(session: ShoppingSessionContext, productId: string): Promise<Cart> {
+    return this.removeFromCart(session.session_id, productId);
+  }
+
+  /**
+   * Async wrapper for searchProducts - maintains compatibility with commerce-agents ABC
+   */
+  async searchProductsAsync(
+    query: string,
+    filters?: SearchFilters | null,
+    limit = 8
+  ): Promise<Product[]> {
+    return this.searchProducts(query, filters, limit);
+  }
+
+  /**
+   * Async wrapper for getProduct - maintains compatibility with commerce-agents ABC
+   */
+  async getProductAsync(productId: string): Promise<ProductDetails | null> {
+    return this.getProduct(productId);
   }
 
   // ---- Orders ----
