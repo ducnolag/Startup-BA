@@ -1,0 +1,53 @@
+# Root .dockerignore — applies to builds whose context is the repo root.
+# Per-service .dockerignore files take precedence inside their own context.
+
+# VCS / nested repos (avoid embedding nested .git history)
+.git
+.gitignore
+.github
+
+# Heavy build artifacts and deps
+**/.venv
+**/venv
+**/env
+**/node_modules
+**/.next
+**/__pycache__
+**/dist
+**/build
+**/out
+**/*.egg-info
+**/.eggs
+
+# Python caches
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+**/.coverage
+**/htmlcov
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Reference clones (large, not needed in builds)
+_refs
+
+# Local backups
+Startup-BA-backup-*
+
+# Logs / temp
+*.log
+*.tmp
+.cache

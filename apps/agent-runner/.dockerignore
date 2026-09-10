@@ -1,0 +1,47 @@
+# Files / dirs not needed in the agent-runner image.
+# Mirrors the root .gitignore but is evaluated by the Docker builder.
+
+# VCS / nested repos
+.git
+.gitignore
+
+# Python build artifacts
+__pycache__
+*.py[cod]
+*.pyo
+*$py.class
+*.egg-info
+.eggs
+build
+dist
+
+# Virtual envs (created at build time, not copied in)
+.venv
+venv
+env
+
+# Tests / cache (kept in repo, not used at runtime)
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov
+tests
+
+# Docs (kept in repo, not used at runtime)
+README.md
+*.md
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Reference clones
+_refs

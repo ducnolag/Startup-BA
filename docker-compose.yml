@@ -1,0 +1,58 @@
+name: toolify
+
+services:
+  agent-runner:
+    build:
+      context: ./apps/agent-runner
+      dockerfile: Dockerfile
+    image: toolify/agent-runner:latest
+    container_name: toolify-agent-runner
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY is required}
+      AGENT_MODEL: ${AGENT_MODEL:-claude-sonnet-4-5}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - agent-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8765/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - toolify-net
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_AGENT_URL: ${NEXT_PUBLIC_AGENT_URL:-http://localhost:8765}
+    image: toolify/web:latest
+    container_name: toolify-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      COMMERCE_AGENT_URL: http://agent-runner:8765/turn
+      NEXT_PUBLIC_AGENT_URL: ${NEXT_PUBLIC_AGENT_URL:-http://localhost:8765}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+    depends_on:
+      agent-runner:
+        condition: service_healthy
+    networks:
+      - toolify-net
+
+volumes:
+  agent-data:
+    name: toolify-agent-data
+
+networks:
+  toolify-net:
+    name: toolify-net
+    driver: bridge

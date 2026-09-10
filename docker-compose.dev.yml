@@ -1,0 +1,39 @@
+# Docker Compose overrides for local development.
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Mounts source code for hot reload (Next.js dev server + Python autoreload).
+# Disables Docker healthchecks (they race with autoreload restarts).
+
+services:
+  agent-runner:
+    build:
+      target: builder   # use builder stage so dev deps are present
+    command: python -m agent_runner.runner
+    volumes:
+      - ./apps/agent-runner/agent_runner:/app/agent_runner
+      - ./apps/agent-runner/shopping_agent:/app/shopping_agent
+      - ./apps/agent-runner/shopping_agent_runtime:/app/shopping_agent_runtime
+      - ./apps/agent-runner/commerce_common:/app/commerce_common
+      - ./apps/agent-runner/skills:/app/skills
+      - agent-data:/app/data
+    environment:
+      LOG_LEVEL: debug
+    healthcheck:
+      disable: true
+
+  web:
+    command: npm run dev
+    volumes:
+      - ./apps/web/app:/app/app
+      - ./apps/web/components:/app/components
+      - ./apps/web/lib:/app/lib
+      - ./apps/web/public:/app/public
+      - ./apps/web/supabase:/app/supabase
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+    healthcheck:
+      disable: true

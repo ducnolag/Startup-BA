@@ -1,0 +1,46 @@
+# Files / dirs not needed in the web image.
+# Mirrors the root .gitignore but is evaluated by the Docker builder.
+
+# VCS / nested repos
+.git
+.gitignore
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Next.js build artifacts (rebuilt in image)
+.next
+out
+build
+
+# Test / lint
+coverage
+.eslintrc.json
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# Reference clones
+_refs
+
+# Supabase local-only artifacts
+supabase/.branches
+supabase/.temp
