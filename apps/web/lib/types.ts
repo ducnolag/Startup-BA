@@ -52,7 +52,7 @@ export interface Product {
 
 // ---------- User saved items ----------
 
-export type SavedItemType = 'scholarship' | 'product' | 'recommendation';
+export type SavedItemType = 'product' | 'recommendation' | 'idea';
 
 export interface SavedItem {
   id: string;

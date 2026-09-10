@@ -235,7 +235,7 @@ export default function Hero3D() {
       rotSpeed: new THREE.Vector3(0.0005, 0.0008, 0.0002),
     });
 
-    // Card 2 — medium card (right, higher) — scholarship list mock
+    // Card 2 — medium card (right, higher) — idea-to-tool list mock
     const card2Group = new THREE.Group();
     card2Group.position.set(2.2, 1.2, 1.5);
     card2Group.rotation.z = 0.12;
@@ -259,7 +259,7 @@ export default function Hero3D() {
       new THREE.MeshStandardMaterial({ color: 0x7c3aed, roughness: 0.3 })
     );
     card2Line.position.set(0, 0.585, 0.03);
-    // 3 list rows — suggests scholarship entries
+    // 3 list rows — suggests problem → tool suggestions
     [0, 1, 2].forEach((i) => {
       const rowBar = new THREE.Mesh(
         new THREE.BoxGeometry(0.85, 0.05, 0.005),

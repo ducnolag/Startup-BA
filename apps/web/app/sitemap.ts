@@ -18,16 +18,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/tools/scholarship`,
+      url: `${SITE_URL}/tools/idea-to-tool`,
       lastModified: now,
-      changeFrequency: 'daily',
+      changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${SITE_URL}/tools/price-compare`,
+      url: `${SITE_URL}/tools/gemini-translate`,
       lastModified: now,
-      changeFrequency: 'daily',
+      changeFrequency: 'weekly',
       priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/tools/price-smart`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/agent`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.7,
     },
     {
       url: `${SITE_URL}/login`,

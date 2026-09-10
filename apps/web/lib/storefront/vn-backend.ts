@@ -1116,7 +1116,7 @@ export class VNStorefrontBackend {
       const entry = this.products.get(id);
       // Items that could be instant delivery eligible
       const instantCategories = ['Phụ kiện', 'Sách', 'Thời trang'];
-      return entry && instantCategories.includes(entry.category);
+      return Boolean(entry && entry.category && instantCategories.includes(entry.category));
     });
 
     if (instantEligible) {

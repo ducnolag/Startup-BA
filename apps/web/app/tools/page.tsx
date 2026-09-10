@@ -7,18 +7,18 @@ import { TOOLS } from '@/lib/constants';
 export const metadata: Metadata = {
   title: 'Tất cả công cụ',
   description:
-    'Danh sách công cụ của Toolify.vn: săn học bổng quốc tế, so sánh giá 4 sàn TMĐT Việt Nam, và nhiều hơn thế nữa.',
+    'Danh sách công cụ của Toolify: gợi ý công cụ cho vấn đề của bạn, dịch thuật đa ngôn ngữ, so sánh giá sản phẩm.',
   alternates: { canonical: 'https://toolify.vn/tools' },
 };
 
-const tools = TOOLS.map((t) => ({
+const tools = TOOLS.map((t, idx) => ({
   id: t.slug,
   name: t.name,
   description: t.description,
   href: t.href,
   status: t.status,
   isNew: t.isNew,
-  ordinal: t.slug === 'scholarship' ? '1' : '2',
+  ordinal: String(idx + 1),
   stats: t.stats,
 }));
 

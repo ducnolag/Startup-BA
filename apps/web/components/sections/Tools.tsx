@@ -11,14 +11,24 @@ if (typeof window !== 'undefined') {
 
 const tools = [
   {
-    id: 'scholarship',
-    title: 'Săn học bổng quốc tế',
+    id: 'idea-to-tool',
+    title: 'Idea-to-Tool — AI gợi ý công cụ',
     summary:
-      'Tổng hợp 500+ học bổng Chevening, Erasmus, Fulbright và các khóa học miễn phí từ Coursera, edX. Lọc theo ngành, GPA, quốc gia.',
-    href: '/tools/scholarship',
+      'Mô tả vấn đề của bạn (sinh viên, founder, freelancer, SMB). AI phân loại, gợi ý 3 công cụ phù hợp kèm action plan cụ thể trong 30 giây.',
+    href: '/tools/idea-to-tool',
+    cta: 'Thử ngay',
+    bullets: ['Phân loại 9 danh mục vấn đề', '3 công cụ + 3 bước hành động', 'Powered by Gemini — miễn phí'],
+    highlight: 'Mới',
+  },
+  {
+    id: 'gemini-translate',
+    title: 'Gemini Translate — dịch nhanh 8 ngôn ngữ',
+    summary:
+      'Dịch Anh ↔ Việt và 6 ngôn ngữ khác, giữ nguyên ý và giọng văn. Dùng cho email, tài liệu, nội dung marketing.',
+    href: '/tools/gemini-translate',
     cta: 'Mở công cụ',
-    bullets: ['Cảnh báo deadline qua Telegram', 'Match theo profile của bạn', 'Cộng đồng submit cơ hội mới'],
-    highlight: '500+ cơ hội',
+    bullets: ['Hỗ trợ Việt, Anh, Trung, Nhật, Hàn, Pháp', 'Giữ format gốc (xuống dòng, bullet, code)', 'Dịch nhanh dưới 2 giây'],
+    highlight: 'Mới',
   },
   {
     id: 'price-smart',
@@ -28,7 +38,7 @@ const tools = [
     href: '/tools/price-smart',
     cta: 'Mở công cụ',
     bullets: ['Phát hiện giá ảo thông minh', 'Gợi ý thời điểm mua tối ưu', 'So sánh 4 sàn + lịch sử 30 ngày'],
-    highlight: 'AI mới',
+    highlight: 'AI',
   },
 ];
 
@@ -181,7 +191,7 @@ export default function Tools() {
               <div className="flex items-start justify-between mb-6">
                 <span className="chip chip-active">{tool.highlight}</span>
                 <span className="text-xs font-medium text-ink-subtle">
-                  0{tool.id === 'scholarship' ? '1' : '2'}
+                  0{tool.id === 'idea-to-tool' ? '1' : tool.id === 'gemini-translate' ? '2' : '3'}
                 </span>
               </div>
 

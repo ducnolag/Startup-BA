@@ -40,8 +40,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-HOST = "localhost"
-PORT = 8765
+HOST = os.environ.get("RUNNER_HOST", "0.0.0.0")
+PORT = int(os.environ.get("RUNNER_PORT", "8765"))
 CORS_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
 _sessions: dict[str, dict[str, Any]] = {}

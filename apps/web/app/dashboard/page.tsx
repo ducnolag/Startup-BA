@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  GraduationCap,
   TrendingDown,
   Sparkles,
   Bookmark,
@@ -203,19 +202,19 @@ export default function DashboardPage() {
                   <div
                     className={cn(
                       'w-10 h-10 rounded-lg flex items-center justify-center',
-                      item.type === 'scholarship'
-                        ? 'bg-blue-50 text-blue-700'
-                        : item.type === 'product'
+                      item.type === 'product'
                         ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-violet-50 text-violet-700'
+                        : item.type === 'recommendation'
+                        ? 'bg-violet-50 text-violet-700'
+                        : 'bg-blue-50 text-blue-700'
                     )}
                   >
-                    {item.type === 'scholarship' ? (
-                      <GraduationCap className="w-5 h-5" />
-                    ) : item.type === 'product' ? (
+                    {item.type === 'product' ? (
                       <TrendingDown className="w-5 h-5" />
-                    ) : (
+                    ) : item.type === 'recommendation' ? (
                       <Sparkles className="w-5 h-5" />
+                    ) : (
+                      <Bookmark className="w-5 h-5" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">

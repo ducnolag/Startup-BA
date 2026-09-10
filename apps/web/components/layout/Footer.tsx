@@ -3,8 +3,9 @@ import Image from 'next/image';
 
 const footerLinks = {
   'Sản phẩm': [
-    { label: 'Săn học bổng', href: '/tools/scholarship' },
-    { label: 'So sánh giá', href: '/tools/price-compare' },
+    { label: 'Idea-to-Tool', href: '/tools/idea-to-tool' },
+    { label: 'Gemini Translate', href: '/tools/gemini-translate' },
+    { label: 'Mua thông minh', href: '/tools/price-smart' },
     { label: 'Bảng giá', href: '/#pricing' },
     { label: 'Câu chuyện', href: '/#mission' },
   ],
@@ -44,7 +45,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="mt-4 text-sm text-ink-muted leading-relaxed max-w-xs">
-              Nền tảng công cụ thông minh cho mọi người, hỗ trợ giải quyết mọi vấn đề và nhiều hơn thế nữa.
+              Nền tảng kết nối nhu cầu thực tế với công cụ AI phù hợp — cho sinh viên, founder, freelancer và SMB Việt Nam.
             </p>
           </div>
 

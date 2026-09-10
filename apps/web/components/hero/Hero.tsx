@@ -227,7 +227,7 @@ export default function Hero() {
 
         {/* Two tool preview cards */}
         <div ref={cardsRef} className="mt-16 md:mt-20 grid lg:grid-cols-2 gap-4 md:gap-5" style={{ perspective: '1000px' }}>
-          {/* Scholarship preview */}
+          {/* Idea-to-Tool preview */}
           <div
             ref={card1Ref}
             className="group relative card p-6 md:p-7 overflow-hidden card-3d-tilt"
@@ -238,11 +238,11 @@ export default function Hero() {
                   Công cụ #1
                 </div>
                 <h3 className="font-display font-bold text-xl md:text-2xl text-ink">
-                  Săn học bổng quốc tế
+                  Idea-to-Tool
                 </h3>
               </div>
               <Link
-                href="/tools/scholarship"
+                href="/tools/idea-to-tool"
                 className="text-xs font-semibold text-brand hover:text-brand-deep flex items-center gap-1"
               >
                 Mở <span aria-hidden>→</span>
@@ -251,29 +251,29 @@ export default function Hero() {
 
             <div className="space-y-2">
               {[
-                { tag: 'Chevening', flag: '🇬🇧', amount: '$40K+', days: '12 ngày' },
-                { tag: 'Erasmus+', flag: '🇪🇺', amount: 'Toàn phần', days: '45 ngày' },
-                { tag: 'Coursera', flag: '🎓', amount: 'Miễn phí', days: 'Còn hạn' },
+                { tag: 'Productivity', icon: '⏱', tip: 'Task tracker cho team 5 người', match: 'Notion + Slack' },
+                { tag: 'Sales', icon: '📈', tip: 'CRM đơn giản cho SMB', match: 'HubSpot Free' },
+                { tag: 'Content', icon: '✍️', tip: 'Lên lịch đăng TikTok 30 ngày', match: 'CapCut + Notion' },
               ].map((s) => (
                 <div
                   key={s.tag}
                   className="flex items-center justify-between p-3 rounded-lg bg-surface-muted border border-transparent hover:border-line"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">{s.flag}</span>
+                    <span className="text-xl">{s.icon}</span>
                     <div>
                       <div className="text-sm font-semibold text-ink">{s.tag}</div>
-                      <div className="text-xs text-ink-muted">Hạn nộp {s.days}</div>
+                      <div className="text-xs text-ink-muted">{s.tip}</div>
                     </div>
                   </div>
-                  <div className="text-xs font-semibold text-brand-deep">{s.amount}</div>
+                  <div className="text-xs font-semibold text-brand-deep">{s.match}</div>
                 </div>
               ))}
             </div>
 
             <div className="mt-4 pt-4 border-t border-line flex items-center justify-between text-xs text-ink-subtle">
-              <span>500+ cơ hội đang mở</span>
-              <span>Updated 2 giờ trước</span>
+              <span>9 danh mục vấn đề</span>
+              <span>Powered by Gemini</span>
             </div>
 
             {/* Shine overlay on hover */}
@@ -291,11 +291,11 @@ export default function Hero() {
                   Công cụ #2
                 </div>
                 <h3 className="font-display font-bold text-xl md:text-2xl text-ink">
-                  So sánh giá thông minh
+                  Mua thông minh
                 </h3>
               </div>
               <Link
-                href="/tools/price-compare"
+                href="/tools/price-smart"
                 className="text-xs font-semibold text-brand hover:text-brand-deep flex items-center gap-1"
               >
                 Mở <span aria-hidden>→</span>

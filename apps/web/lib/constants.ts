@@ -36,18 +36,35 @@ export const STORAGE_KEYS = {
 
 export const TOOLS: ToolEntry[] = [
   {
-    id: 'scholarship',
-    slug: 'scholarship',
-    name: 'Săn học bổng',
-    shortDescription: '500+ cơ hội Chevening, Erasmus, Coursera',
+    id: 'idea-to-tool',
+    slug: 'idea-to-tool',
+    name: 'Idea-to-Tool',
+    shortDescription: 'Mô tả vấn đề — AI gợi ý công cụ phù hợp trong 30 giây',
     description:
-      '500+ học bổng Chevening, Erasmus, Fulbright, Coursera. Lọc theo ngành, GPA, quốc gia.',
-    href: '/tools/scholarship',
+      'Mô tả pain point của bạn (sinh viên, founder, freelancer, SMB). AI phân loại vấn đề, gợi ý 3 công cụ phù hợp kèm action plan cụ thể.',
+    href: '/tools/idea-to-tool',
     status: 'live',
+    isNew: true,
     stats: [
-      { value: '500+', label: 'Cơ hội' },
-      { value: '12', label: 'Quốc gia' },
-      { value: 'Free', label: 'Tra cứu' },
+      { value: '9', label: 'Danh mục' },
+      { value: 'AI', label: 'Gợi ý' },
+      { value: '0đ', label: 'Chi phí' },
+    ],
+  },
+  {
+    id: 'gemini-translate',
+    slug: 'gemini-translate',
+    name: 'Gemini Translate',
+    shortDescription: 'Dịch Anh ↔ Việt + 6 ngôn ngữ, giữ nguyên ý',
+    description:
+      'Dịch nhanh văn bản giữa 8 ngôn ngữ (Việt, Anh, Trung, Nhật, Hàn, Pháp, Tây Ban Nha, Đức). Powered by Gemini 2.0 Flash.',
+    href: '/tools/gemini-translate',
+    status: 'live',
+    isNew: true,
+    stats: [
+      { value: '8', label: 'Ngôn ngữ' },
+      { value: 'Gemini', label: 'AI' },
+      { value: 'Free', label: 'Chi phí' },
     ],
   },
   {
@@ -59,7 +76,6 @@ export const TOOLS: ToolEntry[] = [
       'Dán link sản phẩm → AI phân tích giá, so sánh 4 sàn, phát hiện giá ảo, gợi ý nên mua ngay hay chờ.',
     href: '/tools/price-smart',
     status: 'live',
-    isNew: true,
     stats: [
       { value: '4 sàn', label: 'So sánh' },
       { value: 'AI', label: 'Phân tích' },
@@ -103,18 +119,18 @@ export const SEED_PRODUCTS: Product[] = [
 export const SEED_SAVED: SavedItem[] = [
   {
     id: 'sv_1',
-    type: 'scholarship',
-    title: 'Chevening Scholarship 2026',
-    subtitle: 'Học bổng toàn phần Chính phủ Anh',
-    href: '/tools/scholarship',
+    type: 'product',
+    title: 'iPhone 15 Pro 256GB',
+    subtitle: 'Đang theo dõi giá trên Shopee',
+    href: '/tools/price-smart',
     savedAt: '2026-08-25T10:00:00.000Z',
   },
   {
     id: 'sv_2',
-    type: 'product',
-    title: 'iPhone 15 Pro 256GB',
-    subtitle: 'Đang theo dõi giá trên Shopee',
-    href: '/tools/price-compare',
+    type: 'recommendation',
+    title: 'Idea-to-Tool: Quản lý task team',
+    subtitle: 'AI gợi ý 3 công cụ quản lý task cho team 5 người',
+    href: '/tools/idea-to-tool',
     savedAt: '2026-08-28T14:00:00.000Z',
   },
 ];

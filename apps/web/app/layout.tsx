@@ -19,28 +19,29 @@ const bodyFont = Inter({
 });
 
 const SITE_URL = 'https://toolify.vn';
-const SITE_NAME = 'Toolify.vn';
+const SITE_NAME = 'Toolify';
 const SITE_DESC =
-  'Toolify.vn — Nền tảng công cụ thông minh cho người Việt: săn học bổng quốc tế, so sánh giá 4 sàn TMĐT, theo dõi lịch sử giá và phát hiện giá ảo. Miễn phí, nhanh, chuẩn SEO.';
+  'Toolify — Nơi kết nối nhu cầu thực tế với công cụ AI phù hợp. Gợi ý công cụ cho vấn đề của bạn, dịch thuật đa ngôn ngữ, so sánh giá sản phẩm. Miễn phí, nhanh, tiếng Việt.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Toolify.vn — Công cụ săn học bổng & so sánh giá thông minh',
-    template: '%s · Toolify.vn',
+    default: 'Toolify — Nền tảng công cụ AI cho người Việt',
+    template: '%s · Toolify',
   },
   description: SITE_DESC,
   keywords: [
-    'săn học bổng',
+    'công cụ AI',
+    'gợi ý công cụ',
     'so sánh giá',
-    'học bổng Chevening',
-    'học bổng Erasmus',
-    'giá ảo',
-    'Shopee',
-    'Lazada',
-    'Tiki',
-    'TikTok Shop',
-    'công cụ sinh viên',
+    'dịch thuật',
+    'Gemini AI',
+    'tiếng Việt',
+    'sinh viên',
+    'freelancer',
+    'SMB',
+    'founder',
+    'productivity',
     'toolify',
     'Việt Nam',
   ],
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
     locale: 'vi_VN',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: 'Toolify.vn — Công cụ săn học bổng & so sánh giá thông minh',
+    title: 'Toolify — Nền tảng công cụ AI cho người Việt',
     description: SITE_DESC,
     images: [
       {
@@ -72,7 +73,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Toolify.vn — Công cụ săn học bổng & so sánh giá thông minh',
+    title: 'Toolify — Nền tảng công cụ AI cho người Việt',
     description: SITE_DESC,
     images: ['/logo.png'],
   },
@@ -122,7 +123,7 @@ const websiteJsonLd = {
   inLanguage: 'vi-VN',
   potentialAction: {
     '@type': 'SearchAction',
-    target: `${SITE_URL}/tools/scholarship?q={search_term_string}`,
+    target: `${SITE_URL}/tools?q={search_term_string}`,
     'query-input': 'required name=search_term_string',
   },
 };

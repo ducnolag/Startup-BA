@@ -23,10 +23,9 @@ COPY shopping_agent_runtime ./shopping_agent_runtime
 COPY commerce_common ./commerce_common
 COPY skills ./skills
 
-# Install dependencies (the seven packages + anthropic etc.)
+# Install dependencies (runtime deps from requirements.txt)
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt && \
-    pip install --no-deps starlette sse-starlette uvicorn httpx anthropic pydantic
+    pip install -r requirements.txt
 
 # ---------- runtime stage ----------
 FROM python:3.12-slim AS runtime
