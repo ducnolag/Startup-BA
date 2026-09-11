@@ -52,7 +52,7 @@ RUN chmod -R a+rX /app/scripts
 WORKDIR /app
 COPY requirements.txt app.py ./
 RUN pip install --no-cache-dir "pip==24.2" && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir --default-timeout=300 --retries=5 -r requirements.txt
 
 # Non-root user (matches agent-runner convention)
 RUN useradd --create-home --shell /usr/sbin/nologin --uid 1001 wmremover && \

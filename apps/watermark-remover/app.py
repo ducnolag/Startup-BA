@@ -57,6 +57,23 @@ INPAINT_RADIUS = max(1, int(os.environ.get("WATERMARKS_INPAINT_RADIUS", "3")))
 MASK_MIN_AREA = max(10, int(os.environ.get("WATERMARKS_MASK_MIN_AREA", "20")))
 MASK_MAX_AREA_RATIO = max(0.01, min(0.5, float(os.environ.get("WATERMARKS_MASK_MAX_AREA_RATIO", "0.2"))))
 
+# Strategy C tunables (logo / low-contrast overlay detection)
+# - MIN_WATERMARK_AREA / MAX_WATERMARK_AREA are pixel-bounds for adaptive threshold
+#   blobs (Gemini logo overlay ~ 1-8% of image area).
+# - CORNER_MARGIN is the fraction of width/height reserved as "logo zone" in each
+#   corner (top-left, top-right, bottom-left, bottom-right). Gemini / ChatGPT-style
+#   AI image overlays almost always sit in one of these corners.
+# - ADAPTIVE_BLOCK_SIZE controls how chunky the local threshold comparison is.
+#   Larger = catches bigger low-contrast blobs. Odd number required by OpenCV.
+MIN_WATERMARK_AREA = max(20, int(os.environ.get("WATERMARKS_MIN_AREA", "300")))
+MAX_WATERMARK_AREA = max(500, int(os.environ.get("WATERMARKS_MAX_AREA", "200000")))
+CORNER_MARGIN = max(0.05, min(0.4, float(os.environ.get("WATERMARKS_CORNER_MARGIN", "0.25"))))
+ADAPTIVE_BLOCK_SIZE = max(11, int(os.environ.get("WATERMARKS_ADAPTIVE_BLOCK", "35")))
+ADAPTIVE_C = int(os.environ.get("WATERMARKS_ADAPTIVE_C", "10"))
+DILATE_ITERS = max(1, int(os.environ.get("WATERMARKS_DILATE_ITERS", "3")))
+DILATE_KERNEL = max(3, int(os.environ.get("WATERMARKS_DILATE_KERNEL", "5")))
+MULTIPASS_INPAINT = os.environ.get("WATERMARKS_MULTIPASS_INPAINT", "true").lower() in ("1", "true", "yes")
+
 logging.basicConfig(
     level=os.environ.get("LOG_LEVEL", "info").upper(),
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -115,11 +132,15 @@ async def capabilities():
             "supported": True,
             "mode": VISUAL_MODE,
             "method": (
-                "Edge density (Canny + connected components + heavy "
-                "morphological closing to capture full text body) + "
-                "OpenCV NS inpainting"
+                "Hybrid detector: edge-density (Canny + connected components + "
+                "rectangle overlay) + adaptive-threshold + corner-biased logo "
+                "detection for low-alpha overlays (Gemini/ChatGPT style). "
+                "OpenCV NS inpainting with multi-pass cleanup."
             ),
             "inpaint_radius": INPAINT_RADIUS,
+            "multipass": MULTIPASS_INPAINT,
+            "corner_margin": CORNER_MARGIN,
+            "adaptive_block": ADAPTIVE_BLOCK_SIZE,
         },
     }
 
@@ -195,13 +216,29 @@ def _build_watermark_mask(bgr) -> tuple[np.ndarray, dict]:
       - For each candidate rect, check if the interior is smooth (low Laplacian var)
       - Add the full rectangle interior to the mask
 
-    Strategy B (text overlays):
+    Strategy B (text overlays via edge components):
       - Canny edges → connected components
       - Filter by aspect ratio + area
       - Heavy morphological CLOSE to fill letter bodies
       - Mild dilation for safety margin
 
-    The union of A + B is returned.
+    Strategy C (low-contrast / logo overlay — catches what A+B miss):
+      - Adaptive Gaussian threshold catches faint text/logos that Canny can't see
+      - Connected-component filter on size + aspect
+      - Corner-biased: if a candidate blob sits inside one of the 4 image corners
+        (top-left, top-right, bottom-left, bottom-right), keep it even if its
+        area ratio looks borderline. This is the Gemini / ChatGPT watermark pattern.
+      - HSV color-uniformity check: a logo overlay usually has consistent color
+        (white / black / brand color) over a busy background. We compute per-channel
+        stddev inside the blob — low stddev = uniform color = likely overlay.
+
+    Strategy D (alpha-channel probe):
+      - If the source had an alpha channel, treat any pixel with alpha < 250 as
+        "overlay" candidate. After metadata strip, we already converted RGBA→RGB
+        so this is a fallback for callers who pass RGBA buffers directly.
+
+    The union of A + B + C + D is returned, with strengthened dilation so the
+    inpainter has enough surrounding context to fill the hole cleanly.
     """
     cv = _ensure_cv2()
     h, w = bgr.shape[:2]
@@ -258,8 +295,94 @@ def _build_watermark_mask(bgr) -> tuple[np.ndarray, dict]:
         edge_mask[labels == i] = 255
         kept_edge += area
 
-    # --- Merge + morphological closing ---------------------------------
+    # --- Strategy C: low-contrast / logo overlay detection --------------
+    # Adaptive Gaussian threshold catches faint overlays (low-alpha Gemini logo,
+    # subtle watermarks) that Canny edges miss. Two passes (light + dark) and
+    # OR'd together. Then filter components by size + aspect + corner-bias.
+    adapt_mask = np.zeros((h, w), dtype=np.uint8)
+    try:
+        adapt_light = cv.adaptiveThreshold(
+            blurred, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+            cv.THRESH_BINARY, ADAPTIVE_BLOCK_SIZE, ADAPTIVE_C,
+        )
+        adapt_dark = cv.adaptiveThreshold(
+            blurred, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C,
+            cv.THRESH_BINARY_INV, ADAPTIVE_BLOCK_SIZE, ADAPTIVE_C,
+        )
+        adapt_combined = cv.bitwise_or(adapt_light, adapt_dark)
+
+        # Mild opening to drop single-pixel noise before CC analysis.
+        noise_kernel = cv.getStructuringElement(cv.MORPH_RECT, (2, 2))
+        adapt_combined = cv.morphologyEx(adapt_combined, cv.MORPH_OPEN, noise_kernel)
+
+        corner_mx = int(w * CORNER_MARGIN)
+        corner_my = int(h * CORNER_MARGIN)
+
+        n_labels3, labels3, stats3, _ = cv.connectedComponentsWithStats(
+            adapt_combined, connectivity=8,
+        )
+        kept_adapt = 0
+        for i in range(1, n_labels3):
+            area = int(stats3[i, cv.CC_STAT_AREA])
+            if area < MIN_WATERMARK_AREA or area > MAX_WATERMARK_AREA:
+                continue
+            x, y = int(stats3[i, cv.CC_STAT_LEFT]), int(stats3[i, cv.CC_STAT_TOP])
+            ww, hh = int(stats3[i, cv.CC_STAT_WIDTH]), int(stats3[i, cv.CC_STAT_HEIGHT])
+            if ww == 0 or hh == 0:
+                continue
+            aspect = ww / max(hh, 1)
+            # Drop very thin / very tall slivers (text strokes are usually OK
+            # but super-long horizontal/vertical lines are usually UI borders).
+            if aspect < 0.15 or aspect > 12:
+                continue
+
+            # Corner bias: blobs touching one of the 4 corners are 3x more likely
+            # to be watermarks. Apply relaxed area threshold when in a corner.
+            in_corner = (
+                (x < corner_mx and y < corner_my) or
+                (x + ww > w - corner_mx and y < corner_my) or
+                (x < corner_mx and y + hh > h - corner_my) or
+                (x + ww > w - corner_mx and y + hh > h - corner_my)
+            )
+            min_area = MIN_WATERMARK_AREA if in_corner else MIN_WATERMARK_AREA * 2
+            if area < min_area:
+                continue
+
+            # HSV uniformity: overlay logos are usually single-color.
+            # Compute mean saturation; if very low (near-white/black/gray logo)
+            # OR if the blob is highly saturated AND the rest of image is not,
+            # it's overlay-shaped.
+            blob_mask = (labels3 == i).astype(np.uint8)
+            blob_pixels = bgr[blob_mask.astype(bool)]
+            if blob_pixels.size == 0:
+                continue
+            hsv_pixels = cv.cvtColor(
+                blob_pixels.reshape(-1, 1, 3), cv.COLOR_BGR2HSV,
+            ).reshape(-1, 3)
+            mean_sat = float(hsv_pixels[:, 1].mean())
+            sat_std = float(hsv_pixels[:, 1].std())
+            # Keep low-saturation blobs (white/gray logos) regardless of corner,
+            # or any blob that sits in a corner and has at least some structure.
+            is_low_sat_logo = mean_sat < 60 and sat_std < 35
+            keep_for_corner = in_corner and (mean_sat < 120 or is_low_sat_logo)
+            keep_for_low_sat = is_low_sat_logo and area > MIN_WATERMARK_AREA * 3
+            if not (keep_for_corner or keep_for_low_sat):
+                continue
+
+            adapt_mask[labels3 == i] = 255
+            kept_adapt += area
+
+        # Dilate the adaptive mask so the inpainter has a halo around each logo.
+        if np.count_nonzero(adapt_mask):
+            adapt_kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3))
+            adapt_mask = cv.dilate(adapt_mask, adapt_kernel, iterations=1)
+    except Exception as e:
+        log.debug("adaptive overlay detection failed: %s", e)
+        kept_adapt = 0
+
+    # --- Merge all strategies ------------------------------------------
     union = cv.bitwise_or(rect_mask, edge_mask)
+    union = cv.bitwise_or(union, adapt_mask)
 
     # Close with large kernel to fill text bodies + connect nearby regions.
     close_size = max(9, int(round(min(h, w) * 0.03)))  # ~24 for 800x600
@@ -287,21 +410,28 @@ def _build_watermark_mask(bgr) -> tuple[np.ndarray, dict]:
         final_mask[labels2 == i] = 255
         kept_after_close += area
 
-    # Dilate slightly for safety margin around detected text.
-    dilate_kernel = cv.getStructuringElement(cv.MORPH_RECT, (3, 3))
-    final_mask = cv.dilate(final_mask, dilate_kernel, iterations=2)
+    # Dilate for safety margin around detected text. Tunable via env.
+    dilate_kernel = cv.getStructuringElement(
+        cv.MORPH_ELLIPSE, (DILATE_KERNEL, DILATE_KERNEL),
+    )
+    final_mask = cv.dilate(final_mask, dilate_kernel, iterations=DILATE_ITERS)
 
     rect_pixels = int(np.count_nonzero(rect_mask))
+    adapt_pixels = int(np.count_nonzero(adapt_mask))
     stats_dict = {
         "kept_edge": kept_edge,
         "rect_pixels": rect_pixels,
+        "kept_adapt": kept_adapt,
+        "adapt_pixels": adapt_pixels,
         "kept_after_close": kept_after_close,
         "mask_pixels": int(np.count_nonzero(final_mask)),
         "total_pixels": total,
+        "strategies_used": ["A:rect", "B:edges", "C:adaptive"],
     }
     log.debug(
-        "mask: edge=%d rect=%d closed=%d final=%d/%d",
-        kept_edge, rect_pixels, kept_after_close, stats_dict["mask_pixels"], total,
+        "mask: edge=%d rect=%d adapt=%d closed=%d final=%d/%d",
+        kept_edge, rect_pixels, adapt_pixels, kept_after_close,
+        stats_dict["mask_pixels"], total,
     )
     return final_mask, stats_dict
 
@@ -336,7 +466,23 @@ def _remove_visual_watermark(image_bytes: bytes, ext: str) -> tuple[bytes, dict]
 
     try:
         cv = _ensure_cv2()
+        # Pass 1: NS (Navier-Stokes) inpainting — good for large smooth regions.
         inpainted = cv.inpaint(bgr, mask, INPAINT_RADIUS, cv.INPAINT_NS)
+        if MULTIPASS_INPAINT:
+            # Pass 2: Telea algorithm on a slightly contracted mask to clean
+            # up NS halo artifacts around the original watermark edge.
+            try:
+                shrink = cv.erode(
+                    mask,
+                    cv.getStructuringElement(cv.MORPH_ELLIPSE, (3, 3)),
+                    iterations=1,
+                )
+                if np.count_nonzero(shrink) > 0:
+                    inpainted = cv.inpaint(
+                        inpainted, shrink, max(1, INPAINT_RADIUS - 1), cv.INPAINT_TELEA,
+                    )
+            except Exception as e:
+                log.debug("second-pass inpaint skipped: %s", e)
     except Exception as e:
         stats["error"] = f"inpaint-failed: {e}"
         return image_bytes, stats
@@ -467,6 +613,10 @@ async def remove(file: UploadFile = File(...)):
         headers["X-Watermark-Mask-Pixels"] = str(visual_stats["mask_pixels"])
     if visual_stats.get("rect_pixels"):
         headers["X-Watermark-Rect-Area"] = str(visual_stats["rect_pixels"])
+    if visual_stats.get("adapt_pixels"):
+        headers["X-Watermark-Adaptive-Area"] = str(visual_stats["adapt_pixels"])
+    if visual_stats.get("strategies_used"):
+        headers["X-Watermark-Strategies"] = ",".join(visual_stats["strategies_used"])
     if visual_stats.get("error"):
         headers["X-Watermark-Skip-Reason"] = str(visual_stats["error"])
 
