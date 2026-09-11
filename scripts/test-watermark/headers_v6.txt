@@ -1,0 +1,12 @@
+HTTP/1.1 200 OK
+date: Fri, 11 Sep 2026 15:14:08 GMT
+server: uvicorn
+content-disposition: attachment; filename="test_watermark-cleaned.png"
+x-cleaned-size: 3212
+x-original-size: 6664
+x-metadata-stripped: true
+x-visual-removed: true
+x-watermark-mask-pixels: 4361
+content-length: 3212
+content-type: image/png
+

@@ -17,8 +17,8 @@ Mỗi tool giải quyết một vấn đề cụ thể, dùng chung hạ tầng 
 
 | Tool | Mô tả | Cần API key | Demo mode |
 |------|-------|-------------|-----------|
-| **Idea-to-Tool** (`/tools/idea-to-tool`) | Mô tả vấn đề → AI gợi ý 3 công cụ + 3 bước hành động. Phân loại 9 danh mục vấn đề. | `GEMINI_API_KEY` | ✓ |
-| **Gemini Translate** (`/tools/gemini-translate`) | Dịch giữa 8 ngôn ngữ (Việt, Anh, Trung, Nhật, Hàn, Pháp, Tây Ban Nha, Đức). Giữ nguyên ý và format. | `GEMINI_API_KEY` | ✓ |
+| **PDF Translate** (`/tools/pdf-translate`) | Upload PDF (báo, tạp chí, tài liệu) → AI đọc từng trang và dịch sang tiếng Việt hoặc 5 ngôn ngữ khác. Xuất Markdown. | `GEMINI_API_KEY` | ✓ |
+| **Watermark Remover** (`/tools/watermark-remover`) | Xoá metadata AI provenance (C2PA / SynthID / EXIF / XMP / doc props) khỏi PDF, DOCX, ảnh. Xử lý local. | (sidecar) | (graceful error) |
 | **Mua thông minh** (`/tools/price-smart`) | So sánh giá Shopee/Lazada/Tiki/TikTok Shop, phát hiện giá ảo, gợi ý mua ngay. | (mock data) | Không |
 | **Agent Chat** (`/agent`) | Chat với Claude AI bằng tiếng Việt — tìm sản phẩm, so sánh, đặt vào giỏ. | `ANTHROPIC_API_KEY` | graceful error |
 
@@ -32,26 +32,72 @@ cd Startup-BA
 cp .env.example .env
 # Mở .env và dán API key (không bắt buộc — chạy được với demo mode):
 #   ANTHROPIC_API_KEY=sk-ant-...   (cho Agent Chat)
-#   GEMINI_API_KEY=AIza-...         (cho Idea-to-Tool + Gemini Translate)
+#   GEMINI_API_KEY=AIza-...         (cho PDF Translate)
 docker-compose up -d
 open http://localhost:3000
 ```
 
-Mở [http://localhost:3000/tools/idea-to-tool](http://localhost:3000/tools/idea-to-tool) để thử công cụ mới. Agent runner chạy ở `http://localhost:8765` (health check `/health`).
+Sau khi stack lên, các service sẽ chạy ở:
+- Web (Next.js): `http://localhost:3000`
+- Agent runner (Claude): `http://localhost:8765` (`/health`)
+- Watermark remover (sidecar): `http://localhost:8766` (`/health`)
+
+Công cụ mới nhất: [http://localhost:3000/tools/pdf-translate](http://localhost:3000/tools/pdf-translate) và [http://localhost:3000/tools/watermark-remover](http://localhost:3000/tools/watermark-remover).
 
 Xem log:
 ```bash
 docker-compose logs -f agent-runner
 docker-compose logs -f web
+docker-compose logs -f watermark-remover
 ```
 
 Tắt stack: `docker-compose down`.
 
+## Troubleshooting
+
+### Sau khi đổi biến trong `.env`, container vẫn dùng giá trị cũ
+Docker compose chỉ inject env khi **tạo container**. Nếu bạn sửa `.env` xong
+mà `docker-compose up -d` không rebuild image, container cũ vẫn chạy với env cũ.
+Cách chuẩn:
+
+```bash
+# Force tạo lại container (giữ nguyên image, chỉ restart với env mới)
+docker-compose up -d --force-recreate web
+
+# Hoặc rebuild từ đầu (khi đổi Dockerfile / deps)
+docker-compose build web
+docker-compose up -d --force-recreate web
+```
+
+### PDF Translate báo lỗi `404 Model not found`
+Google đã shutdown `gemini-2.0-flash` từ ngày **01/06/2026** (xem
+https://ai.google.dev/gemini-api/docs/deprecations). Nếu `.env` của bạn
+vẫn ghim `GEMINI_MODEL=gemini-2.0-flash`, đổi sang:
+- `gemini-2.5-flash` (phổ biến nhất, multimodal, free tier OK), hoặc
+- `gemini-2.5-pro` (chất lượng cao hơn, free tier giới hạn hơn).
+
+Sau đó `docker-compose up -d --force-recreate web` để áp env mới.
+
+### Watermark Remover container không lên
+```bash
+docker-compose logs watermark-remover
+```
+Lỗi thường gặp: exiftool / qpdf chưa cài trong image. Re-build:
+```bash
+docker-compose build watermark-remover
+docker-compose up -d watermark-remover
+```
+
+### Gemini API rate-limit (429)
+Free tier giới hạn ~15 RPM. Service tự trả về message thân thiện; chờ 30s rồi thử
+lại. Nếu lặp lại liên tục, cân nhắc nâng cấp API plan hoặc dùng `GEMINI_MODEL`
+chỉ định model Pro có quota riêng.
+
 ## Demo mode
 
 Tất cả công cụ Gemini đều chạy được **kể cả khi chưa có `GEMINI_API_KEY`**:
-- **Idea-to-Tool**: trả gợi ý mặc định + banner "Demo mode".
-- **Gemini Translate**: trả placeholder giải thích.
+- **PDF Translate**: trả message "GEMINI_API_KEY chưa được cấu hình" + hướng dẫn set key.
+- **Idea-to-Tool** (legacy): trả gợi ý mặc định + banner "Demo mode".
 - **Agent Chat** (cần `ANTHROPIC_API_KEY`): nếu thiếu key, runner trả graceful error không crash.
 
 Lấy Gemini API key miễn phí tại [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (free tier đủ cho mục đích cá nhân, ~15 RPM).
@@ -128,16 +174,22 @@ Startup-BA/
 │   │   ├── pyproject.toml
 │   │   ├── Dockerfile
 │   │   └── README.md
+│   ├── watermark-remover/    # Python 3.12 FastAPI sidecar (port 8766)
+│   │   ├── app.py            # Thin FastAPI wrapper (MIT attribution)
+│   │   ├── requirements.txt
+│   │   ├── Dockerfile        # Multi-stage: clone upstream + exiftool/qpdf
+│   │   ├── ATTRIBUTION.md    # Upstream license + changes
+│   │   └── .dockerignore
 │   └── web/                  # Next.js 14 (App Router)
 │       ├── app/              # Routes: /, /agent, /admin, /dashboard, /tools/*, /api/…
 │       │   ├── tools/
-│       │   │   ├── idea-to-tool/      # ← NEW: AI gợi ý công cụ
-│       │   │   ├── gemini-translate/  # ← NEW: Dịch đa ngôn ngữ
+│       │   │   ├── pdf-translate/      # Upload PDF → Gemini translate
+│       │   │   ├── watermark-remover/  # Strip AI metadata
 │       │   │   └── price-smart/
-│       │   └── api/tools/             # ← NEW: API cho 2 tool trên
+│       │   └── api/tools/             # API cho 3 tool trên
 │       ├── components/
 │       ├── lib/
-│       │   └── gemini/                # ← NEW: Gemini client + prompts
+│       │   └── gemini/                # Gemini client + prompts
 │       ├── public/
 │       ├── supabase/
 │       ├── package.json
@@ -152,7 +204,7 @@ Startup-BA/
 ├── .gitignore
 ├── .dockerignore
 ├── .env.example
-├── docker-compose.yml        # Production-like orchestration
+├── docker-compose.yml        # Production-like orchestration (3 services)
 ├── docker-compose.dev.yml    # Dev overrides (hot reload)
 ├── LICENSE
 └── README.md
@@ -165,16 +217,22 @@ Startup-BA/
 - Anthropic SDK 0.122, commerce-agents ShoppingAgent (vendored)
 - Pydantic 2.13 cho schemas
 
+**Watermark remover (Python sidecar)**
+- Python 3.12, FastAPI + Uvicorn
+- Logic adapted từ [guillaumemeyer/watermarks-remover](https://github.com/guillaumemeyer/watermarks-remover) (MIT)
+- Hệ thống deps: `exiftool` (EXIF/XMP/IPTC), `qpdf` (PDF rewriting), `ghostscript` (deep re-distill)
+
 **Web (Next.js)**
 - Next.js 14 (App Router) + TypeScript
 - Tailwind CSS, Framer Motion, GSAP, Lenis
 - React Three Fiber / Drei (3D hero)
 - Supabase SSR cho auth (optional)
-- **Gemini REST API** (Idea-to-Tool + Gemini Translate) — dùng fetch thuần, không cần SDK
+- **Gemini REST API** (PDF Translate + Idea-to-Tool) — dùng fetch thuần, không cần SDK
+- **Gemini Files API** cho PDF input (multipart upload qua resumable protocol)
 
 **Deployment**
-- Docker multi-stage builds
-- docker-compose cho local + production-like
+- Docker multi-stage builds (mỗi service có Dockerfile riêng)
+- docker-compose cho local + production-like (3 services: agent-runner, watermark-remover, web)
 - GitHub Actions CI
 
 ## Scripts hữu ích

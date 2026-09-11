@@ -25,6 +25,80 @@ services:
     networks:
       - toolify-net
 
+  watermark-remover:
+    build:
+      context: ./apps/watermark-remover
+      dockerfile: Dockerfile
+      args:
+        WATERMARKS_REF: ${WATERMARKS_REF:-v0.7.0}
+    image: toolify/watermark-remover:latest
+    container_name: toolify-watermark-remover
+    restart: unless-stopped
+    ports:
+      - "8766:8766"
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      WATERMARKS_VERSION: ${WATERMARKS_VERSION:-1.0.0-toolify}
+      WATERMARKS_MAX_BYTES: ${WATERMARKS_MAX_BYTES:-52428800}
+      WATERMARKS_TIMEOUT: ${WATERMARKS_TIMEOUT:-120}
+    # Watermark-remover sidecar không cần bất kỳ secret nào từ .env.local
+    # (chỉ xử lý file nặc danh, không gọi external API). Bỏ qua env_file.
+    # File processing chỉ là temp I/O — KHÔNG mount persistent volume
+    # (tránh data leak giữa các lần restart).
+    tmpfs:
+      - /tmp:size=200m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8766/health', timeout=5).status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - toolify-net
+
+  pdf-translator:
+    build:
+      context: ./apps/pdf-translator
+      dockerfile: Dockerfile
+    image: toolify/pdf-translator:latest
+    container_name: toolify-pdf-translator
+    restart: unless-stopped
+    ports:
+      - "8767:8767"
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PDF_TRANSLATOR_VERSION: ${PDF_TRANSLATOR_VERSION:-1.0.0-toolify}
+      PDF_TRANSLATOR_MAX_BYTES: ${PDF_TRANSLATOR_MAX_BYTES:-20971520}
+      PDF_TRANSLATOR_TIMEOUT: ${PDF_TRANSLATOR_TIMEOUT:-180}
+      GEMINI_MODEL: ${NEXT_PUBLIC_GEMINI_MODEL:-gemini-2.5-flash}
+      # Sidecar reads GEMINI_API_KEY directly (see docker-compose.yml entrypoint
+      # notes on web). Populated from env_file in web, but this container reads
+      # .env.local via env_file below so it has the key at startup too.
+    env_file:
+      - path: ./.env.local
+        required: false
+    entrypoint:
+      - sh
+      - -c
+      - |
+        # Mirror the bridge used by `web`: if the user only configured
+        # NEXT_PUBLIC_GEMINI_API_KEY (browser-bridged naming), alias it
+        # to GEMINI_API_KEY so the FastAPI wrapper can use it.
+        if [ -z "$$GEMINI_API_KEY" ] && [ -n "$$NEXT_PUBLIC_GEMINI_API_KEY" ]; then
+          export GEMINI_API_KEY="$$NEXT_PUBLIC_GEMINI_API_KEY"
+        fi
+        exec python -m uvicorn app:app --host 0.0.0.0 --port 8767
+    tmpfs:
+      - /tmp:size=200m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8767/health', timeout=5).status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - toolify-net
+
   web:
     build:
       context: ./apps/web
@@ -36,16 +110,49 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    # ---- Load secrets từ .env.local (user-owned, KHÔNG commit) ----
+    # `required: false` → compose vẫn chạy được khi user chưa tạo file
+    # (vd. CI build image). Khi file có, các biến sẽ được inject thẳng
+    # vào container environment. Lưu ý: env_file CHỈ populate runtime
+    # env của container, KHÔNG dùng được cho compose interpolation `${VAR}`.
+    env_file:
+      - path: ./.env.local
+        required: false
+    # ---- Compose-level env (giá trị có thể bị override bởi env_file? KHÔNG) ----
+    # Theo precedence: `environment` ở compose > `env_file` > Dockerfile ENV.
+    # Vì vậy nếu 1 biến vừa có ở env_file vừa có ở environment:, container
+    # sẽ thấy giá trị từ `environment:` (interpolation có thể trống).
+    # → Mình BỎ các biến user-đặt (Supabase, vote URLs, app URL) khỏi
+    # block này, để env_file là nguồn duy nhất cho chúng.
     environment:
       NODE_ENV: production
       COMMERCE_AGENT_URL: http://agent-runner:8765/turn
       NEXT_PUBLIC_AGENT_URL: ${NEXT_PUBLIC_AGENT_URL:-http://localhost:8765}
-      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
+      NEXT_PUBLIC_WATERMARK_URL: ${NEXT_PUBLIC_WATERMARK_URL:-http://localhost:8766}
+      GEMINI_MODEL: ${NEXT_PUBLIC_GEMINI_MODEL:-gemini-2.5-flash}
+      WATERMARK_SERVICE_URL: ${WATERMARK_SERVICE_URL:-http://watermark-remover:8766}
+      PDF_TRANSLATOR_SERVICE_URL: ${PDF_TRANSLATOR_SERVICE_URL:-http://pdf-translator:8767}
+    # ---- Bridge NEXT_PUBLIC_GEMINI_API_KEY → GEMINI_API_KEY ----
+    # User đặt key Gemini với prefix `NEXT_PUBLIC_` (browser-safe naming)
+    # trong .env.local. App code (lib/gemini/client.ts) cố ý đọc
+    # GEMINI_API_KEY (server-side, không leak ra browser — xem comment
+    # trong lib/constants.ts). Compose interpolation KHÔNG đọc được
+    # env_file values, nên mình phải copy tại container-startup.
+    # KHÔNG sửa .env.local của user; KHÔNG sửa lib/gemini/client.ts.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        if [ -n "$$NEXT_PUBLIC_GEMINI_API_KEY" ]; then
+          export GEMINI_API_KEY="$$NEXT_PUBLIC_GEMINI_API_KEY"
+        fi
+        exec node server.js
     depends_on:
       agent-runner:
+        condition: service_healthy
+      watermark-remover:
+        condition: service_healthy
+      pdf-translator:
         condition: service_healthy
     networks:
       - toolify-net

@@ -74,3 +74,30 @@ jobs:
 
       - name: Docker build
         run: docker build -t toolify/web:ci .
+
+  watermark-remover:
+    name: watermark-remover (Python sidecar)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/watermark-remover
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify FastAPI app imports
+        run: |
+          python -c "from app import app; print('OK')"
+
+      - name: Docker build
+        # Đặt WATERMARKS_REF qua build arg; tag của upstream repo.
+        run: docker build --build-arg WATERMARKS_REF=v0.7.0 -t toolify/watermark-remover:ci .

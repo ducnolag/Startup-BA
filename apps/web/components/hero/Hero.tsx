@@ -227,7 +227,7 @@ export default function Hero() {
 
         {/* Two tool preview cards */}
         <div ref={cardsRef} className="mt-16 md:mt-20 grid lg:grid-cols-2 gap-4 md:gap-5" style={{ perspective: '1000px' }}>
-          {/* Idea-to-Tool preview */}
+          {/* PDF Translate preview */}
           <div
             ref={card1Ref}
             className="group relative card p-6 md:p-7 overflow-hidden card-3d-tilt"
@@ -238,11 +238,11 @@ export default function Hero() {
                   Công cụ #1
                 </div>
                 <h3 className="font-display font-bold text-xl md:text-2xl text-ink">
-                  Idea-to-Tool
+                  PDF Translate
                 </h3>
               </div>
               <Link
-                href="/tools/idea-to-tool"
+                href="/tools/pdf-translate"
                 className="text-xs font-semibold text-brand hover:text-brand-deep flex items-center gap-1"
               >
                 Mở <span aria-hidden>→</span>
@@ -251,9 +251,9 @@ export default function Hero() {
 
             <div className="space-y-2">
               {[
-                { tag: 'Productivity', icon: '⏱', tip: 'Task tracker cho team 5 người', match: 'Notion + Slack' },
-                { tag: 'Sales', icon: '📈', tip: 'CRM đơn giản cho SMB', match: 'HubSpot Free' },
-                { tag: 'Content', icon: '✍️', tip: 'Lên lịch đăng TikTok 30 ngày', match: 'CapCut + Notion' },
+                { tag: 'Báo · tạp chí', icon: '📰', tip: 'TechCrunch tuần này', lang: 'vi' },
+                { tag: 'Giáo trình', icon: '📚', tip: 'Slide bài giảng đại học', lang: 'vi' },
+                { tag: 'Tài liệu kỹ thuật', icon: '📄', tip: 'Whitepaper / report PDF', lang: 'en' },
               ].map((s) => (
                 <div
                   key={s.tag}
@@ -266,13 +266,15 @@ export default function Hero() {
                       <div className="text-xs text-ink-muted">{s.tip}</div>
                     </div>
                   </div>
-                  <div className="text-xs font-semibold text-brand-deep">{s.match}</div>
+                  <div className="text-xs font-semibold text-brand-deep uppercase tracking-wider">
+                    → {s.lang}
+                  </div>
                 </div>
               ))}
             </div>
 
             <div className="mt-4 pt-4 border-t border-line flex items-center justify-between text-xs text-ink-subtle">
-              <span>9 danh mục vấn đề</span>
+              <span>Tối đa 20 MB</span>
               <span>Powered by Gemini</span>
             </div>
 

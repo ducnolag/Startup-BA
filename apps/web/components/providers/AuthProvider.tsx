@@ -220,7 +220,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return {
           ok: false,
           error:
-            'OAuth chưa khả dụng. Hãy cấu hình Supabase trong .env.local theo hướng dẫn.',
+            'Supabase chưa được cấu hình. Hãy cập nhật NEXT_PUBLIC_SUPABASE_URL và ' +
+            'NEXT_PUBLIC_SUPABASE_ANON_KEY trong file .env.local rồi khởi động lại ' +
+            'ứng dụng (docker-compose up -d --build web). ' +
+            'Xem hướng dẫn tại: https://supabase.com/dashboard → Project Settings → API',
         };
       }
       const supabase = createBrowserSupabase();

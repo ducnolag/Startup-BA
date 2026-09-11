@@ -18,7 +18,7 @@ import type {
 export const SITE_URL = 'https://toolify.vn';
 export const SITE_NAME = 'Toolify.vn';
 export const SITE_DESC =
-  'Nền tảng công cụ thông minh cho người Việt: săn học bổng quốc tế, so sánh giá 4 sàn TMĐT, theo dõi lịch sử giá và phát hiện giá ảo.';
+  'Nền tảng công cụ thông minh cho người Việt: dịch PDF (báo/tạp chí), xoá metadata AI, so sánh giá 4 sàn TMĐT, phát hiện giá ảo.';
 
 // ---------- Storage keys ----------
 
@@ -36,35 +36,38 @@ export const STORAGE_KEYS = {
 
 export const TOOLS: ToolEntry[] = [
   {
-    id: 'idea-to-tool',
-    slug: 'idea-to-tool',
-    name: 'Idea-to-Tool',
-    shortDescription: 'Mô tả vấn đề — AI gợi ý công cụ phù hợp trong 30 giây',
+    id: 'pdf-translate',
+    slug: 'pdf-translate',
+    name: 'PDF Translate',
+    shortDescription: 'Upload PDF (báo, tạp chí, tài liệu) — dịch từng trang sang tiếng Việt',
     description:
-      'Mô tả pain point của bạn (sinh viên, founder, freelancer, SMB). AI phân loại vấn đề, gợi ý 3 công cụ phù hợp kèm action plan cụ thể.',
-    href: '/tools/idea-to-tool',
+      'Upload file PDF (báo, tạp chí, tài liệu học thuật). AI đọc và dịch từng trang sang tiếng Việt hoặc 5 ngôn ngữ khác. Tải về bản Markdown.',
+    href: '/tools/pdf-translate',
     status: 'live',
     isNew: true,
     stats: [
-      { value: '9', label: 'Danh mục' },
-      { value: 'AI', label: 'Gợi ý' },
-      { value: '0đ', label: 'Chi phí' },
+      { value: '20 MB', label: 'Tối đa' },
+      { value: '6', label: 'Ngôn ngữ' },
+      { value: 'Gemini', label: 'AI' },
     ],
   },
   {
-    id: 'gemini-translate',
-    slug: 'gemini-translate',
-    name: 'Gemini Translate',
-    shortDescription: 'Dịch Anh ↔ Việt + 6 ngôn ngữ, giữ nguyên ý',
+    id: 'watermark-remover',
+    slug: 'watermark-remover',
+    name: 'Strip AI Metadata',
+    shortDescription:
+      'Xoá dấu vết AI (C2PA, SynthID, EXIF, doc props) khỏi PDF, DOCX, ảnh',
     description:
-      'Dịch nhanh văn bản giữa 8 ngôn ngữ (Việt, Anh, Trung, Nhật, Hàn, Pháp, Tây Ban Nha, Đức). Powered by Gemini 2.0 Flash.',
-    href: '/tools/gemini-translate',
+      'Strip AI provenance markers (C2PA manifest, EXIF, XMP, doc properties) ' +
+      'khỏi PDF, DOCX và ảnh. Hỗ trợ Adobe Firefly, Gemini SynthID, Claude, OpenAI. ' +
+      'Không xoá watermark trực quan — chỉ xoá metadata dấu vết nguồn gốc AI.',
+    href: '/tools/watermark-remover',
     status: 'live',
     isNew: true,
     stats: [
-      { value: '8', label: 'Ngôn ngữ' },
-      { value: 'Gemini', label: 'AI' },
-      { value: 'Free', label: 'Chi phí' },
+      { value: 'PDF · DOCX · Ảnh', label: 'Định dạng' },
+      { value: 'C2PA + EXIF', label: 'Strip' },
+      { value: 'Local', label: 'Xử lý' },
     ],
   },
   {
@@ -128,9 +131,9 @@ export const SEED_SAVED: SavedItem[] = [
   {
     id: 'sv_2',
     type: 'recommendation',
-    title: 'Idea-to-Tool: Quản lý task team',
-    subtitle: 'AI gợi ý 3 công cụ quản lý task cho team 5 người',
-    href: '/tools/idea-to-tool',
+    title: 'PDF Translate: báo công nghệ tuần này',
+    subtitle: 'Bản dịch tiếng Việt PDF từ TechCrunch / The Verge',
+    href: '/tools/pdf-translate',
     savedAt: '2026-08-28T14:00:00.000Z',
   },
 ];
@@ -227,14 +230,19 @@ export const CATEGORIES: { id: ProductCategory; label: string; emoji: string; ke
 ];
 
 // ---------- Gemini API config ----------
+//
+// Lưu ý: GEMINI_API_KEY là biến server-side (đọc được trong API routes).
+// Next.js chỉ tự động phơi ra client với biến bắt đầu bằng NEXT_PUBLIC_* —
+// vì vậy ta KHÔNG dùng NEXT_PUBLIC_GEMINI_API_KEY (sẽ lộ key ra browser).
+//
+// Model mặc định `gemini-2.5-flash` — ổn định, multimodal (hỗ trợ PDF qua
+// Files API), và free tier đủ dùng cho cá nhân. `gemini-2.0-flash` đã bị
+// Google shutdown ngày 01/06/2026 (xem https://ai.google.dev/gemini-api/docs/deprecations).
+// Override bằng GEMINI_MODEL nếu bạn có quyền truy cập model khác.
 
-export const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY ?? '';
-// Antigravity endpoint cho free models (gemini-2.5-flash, gemma-3...)
-// Antigravity endpoint (Antigravity Gemini free) - alternative free tier
-export const GEMINI_MODEL = process.env.NEXT_PUBLIC_GEMINI_MODEL ?? 'gemini-2.5-flash';
-// Endpoint mặc định - dùng Google's official free endpoint
+export const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? '';
+export const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash';
 export const GEMINI_ENDPOINT =
-  process.env.NEXT_PUBLIC_GEMINI_ENDPOINT ??
   `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // ---------- Vote / Survey CTA ----------

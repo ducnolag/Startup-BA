@@ -3,8 +3,8 @@ import Image from 'next/image';
 
 const footerLinks = {
   'Sản phẩm': [
-    { label: 'Idea-to-Tool', href: '/tools/idea-to-tool' },
-    { label: 'Gemini Translate', href: '/tools/gemini-translate' },
+    { label: 'PDF Translate', href: '/tools/pdf-translate' },
+    { label: 'Strip AI Metadata', href: '/tools/watermark-remover' },
     { label: 'Mua thông minh', href: '/tools/price-smart' },
     { label: 'Bảng giá', href: '/#pricing' },
     { label: 'Câu chuyện', href: '/#mission' },

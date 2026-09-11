@@ -11,23 +11,23 @@ if (typeof window !== 'undefined') {
 
 const tools = [
   {
-    id: 'idea-to-tool',
-    title: 'Idea-to-Tool — AI gợi ý công cụ',
+    id: 'pdf-translate',
+    title: 'PDF Translate — dịch tài liệu sang tiếng Việt',
     summary:
-      'Mô tả vấn đề của bạn (sinh viên, founder, freelancer, SMB). AI phân loại, gợi ý 3 công cụ phù hợp kèm action plan cụ thể trong 30 giây.',
-    href: '/tools/idea-to-tool',
-    cta: 'Thử ngay',
-    bullets: ['Phân loại 9 danh mục vấn đề', '3 công cụ + 3 bước hành động', 'Powered by Gemini — miễn phí'],
+      'Upload PDF (báo, tạp chí, giáo trình). AI đọc từng trang và dịch sang tiếng Việt hoặc 5 ngôn ngữ khác. Tải về bản Markdown.',
+    href: '/tools/pdf-translate',
+    cta: 'Mở công cụ',
+    bullets: ['Hỗ trợ PDF đến 20 MB', 'Dịch theo từng trang, giữ format', 'Xuất Markdown để copy/paste dễ'],
     highlight: 'Mới',
   },
   {
-    id: 'gemini-translate',
-    title: 'Gemini Translate — dịch nhanh 8 ngôn ngữ',
+    id: 'watermark-remover',
+    title: 'Strip AI Metadata — xoá dấu vết AI khỏi file',
     summary:
-      'Dịch Anh ↔ Việt và 6 ngôn ngữ khác, giữ nguyên ý và giọng văn. Dùng cho email, tài liệu, nội dung marketing.',
-    href: '/tools/gemini-translate',
+      'Xoá metadata AI provenance (C2PA manifest, EXIF, XMP, doc props) khỏi PDF, DOCX và ảnh. Xử lý local, không upload lên cloud.',
+    href: '/tools/watermark-remover',
     cta: 'Mở công cụ',
-    bullets: ['Hỗ trợ Việt, Anh, Trung, Nhật, Hàn, Pháp', 'Giữ format gốc (xuống dòng, bullet, code)', 'Dịch nhanh dưới 2 giây'],
+    bullets: ['PDF, DOCX, PNG/JPG/WebP', 'Strip C2PA + EXIF + XMP', 'Hỗ trợ Claude / Gemini / OpenAI provenance'],
     highlight: 'Mới',
   },
   {
@@ -191,7 +191,7 @@ export default function Tools() {
               <div className="flex items-start justify-between mb-6">
                 <span className="chip chip-active">{tool.highlight}</span>
                 <span className="text-xs font-medium text-ink-subtle">
-                  0{tool.id === 'idea-to-tool' ? '1' : tool.id === 'gemini-translate' ? '2' : '3'}
+                  0{tool.id === 'pdf-translate' ? '1' : tool.id === 'watermark-remover' ? '2' : '3'}
                 </span>
               </div>
 

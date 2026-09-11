@@ -66,3 +66,24 @@ Startup-BA-backup-*/
 
 # ---------- Docker ----------
 docker-compose.override.yml
+
+# ---------- Watermark remover runtime temp ----------
+# Sidecar xử lý PDF / DOCX / ảnh vào temp dirs này — KHÔNG commit
+# output của user (privacy) và KHÔNG commit uploaded files.
+apps/watermark-remover/uploads/
+apps/watermark-remover/outputs/
+apps/watermark-remover/__pycache__/
+apps/watermark-remover/.venv/
+
+# ---------- Agent runner Python artifacts ----------
+apps/agent-runner/__pycache__/
+apps/agent-runner/.venv/
+apps/agent-runner/.pytest_cache/
+apps/agent-runner/.ruff_cache/
+apps/agent-runner/.mypy_cache/
+apps/agent-runner/**/*.egg-info/
+
+# ---------- Next.js build artifacts (giữ .dockerignore của web đã lo, nhưng đề phòng) ----------
+apps/web/.next/
+apps/web/.swc/
+apps/web/out/

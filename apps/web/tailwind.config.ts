@@ -17,46 +17,49 @@ const config: Config = {
           dark: '#0f172a', // inverse surface
         },
         // Ink — text hierarchy
+        // Dùng rgb() + <alpha-value> để Tailwind opacity modifier (bg-ink/90,
+        // text-ink/60, ...) hoạt động xuyên suốt design system.
         ink: {
-          DEFAULT: '#0f172a', // primary
-          muted: '#475569', // secondary
-          subtle: '#94a3b8', // tertiary / hint
-          inverse: '#ffffff', // on dark
+          DEFAULT: 'rgb(15 23 42 / <alpha-value>)', // primary #0f172a
+          muted: 'rgb(71 85 105 / <alpha-value>)', // secondary #475569
+          subtle: 'rgb(148 163 184 / <alpha-value>)', // tertiary #94a3b8
+          inverse: 'rgb(255 255 255 / <alpha-value>)', // on dark
         },
         // Brand — cyan accent (matches logo)
+        // Đổi sang rgb()/hex + <alpha-value> để opacity modifier hoạt động.
         brand: {
-          DEFAULT: '#00a8d4', // primary brand action
-          50: '#ecfeff',
-          100: '#cffafe',
-          200: '#a5f3fc',
-          300: '#67e8f9',
-          400: '#22d3ee',
-          500: '#00a8d4',
-          600: '#008fb5',
-          700: '#006c89',
-          800: '#00556c',
-          900: '#003e51',
+          DEFAULT: 'rgb(0 168 212 / <alpha-value>)', // #00a8d4
+          50: 'rgb(236 254 255 / <alpha-value>)',
+          100: 'rgb(207 250 254 / <alpha-value>)',
+          200: 'rgb(165 243 252 / <alpha-value>)',
+          300: 'rgb(103 232 249 / <alpha-value>)',
+          400: 'rgb(34 211 238 / <alpha-value>)',
+          500: 'rgb(0 168 212 / <alpha-value>)',
+          600: 'rgb(0 143 181 / <alpha-value>)',
+          700: 'rgb(0 108 137 / <alpha-value>)',
+          800: 'rgb(0 85 108 / <alpha-value>)',
+          900: 'rgb(0 62 81 / <alpha-value>)',
         },
         navy: {
-          DEFAULT: '#0a1a3a',
-          50: '#eef2f8',
-          100: '#d6deeb',
-          500: '#1d4296',
-          600: '#1c3878',
-          700: '#142b5e',
-          800: '#0e2148',
-          900: '#0a1a3a',
+          DEFAULT: 'rgb(10 26 58 / <alpha-value>)',
+          50: 'rgb(238 242 248 / <alpha-value>)',
+          100: 'rgb(214 222 235 / <alpha-value>)',
+          500: 'rgb(29 66 150 / <alpha-value>)',
+          600: 'rgb(28 56 120 / <alpha-value>)',
+          700: 'rgb(20 43 94 / <alpha-value>)',
+          800: 'rgb(14 33 72 / <alpha-value>)',
+          900: 'rgb(10 26 58 / <alpha-value>)',
         },
         // Borders / dividers
         line: {
-          DEFAULT: '#e2e8f0',
-          strong: '#cbd5e1',
-          subtle: '#f1f5f9',
+          DEFAULT: 'rgb(226 232 240 / <alpha-value>)',
+          strong: 'rgb(203 213 225 / <alpha-value>)',
+          subtle: 'rgb(241 245 249 / <alpha-value>)',
         },
-        // Semantic
-        success: '#10b981',
-        warning: '#f59e0b',
-        danger: '#ef4444',
+        // Semantic — cũng thêm alpha-value cho opacity modifier
+        success: 'rgb(16 185 129 / <alpha-value>)',
+        warning: 'rgb(245 158 11 / <alpha-value>)',
+        danger: 'rgb(239 68 68 / <alpha-value>)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],

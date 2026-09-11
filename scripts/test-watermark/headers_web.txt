@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch
+content-disposition: attachment; filename="test_watermark-cleaned.png"
+content-type: image/png
+x-cleaned-size: 3212
+x-original-size: 6664
+Date: Fri, 11 Sep 2026 15:14:38 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+

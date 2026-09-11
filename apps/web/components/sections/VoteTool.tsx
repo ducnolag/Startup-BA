@@ -128,8 +128,14 @@ export default function VoteTool() {
                     href={VOTE_SURVEY_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center justify-between gap-4 rounded-2xl bg-ink text-white px-5 py-4 hover:bg-ink/90 transition-colors"
-                    style={{ opacity: 0 }}
+                    // Brand-tinted solid button (không dùng bg-ink vì trên nền sáng
+                    // Tailwind opacity-modifier /90 không áp dụng được với hex thường —
+                    // hover sẽ im lặng không đổi, gây cảm giác button "chết").
+                    // Dùng inline style để hover state luôn nhìn thấy được.
+                    className="group relative flex items-center justify-between gap-4 rounded-2xl px-5 py-4 text-white transition-all duration-200 shadow-card hover:shadow-pop hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand"
+                    style={{ backgroundColor: '#0f172a' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#1e293b')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0f172a')}
                   >
                     <span className="flex items-center gap-3">
                       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
@@ -139,7 +145,7 @@ export default function VoteTool() {
                         <span className="block font-semibold text-sm">
                           Điền khảo sát chọn tool
                         </span>
-                        <span className="block text-xs text-white/60">
+                        <span className="block text-xs text-white/70">
                           ~30 giây · 3 câu hỏi
                         </span>
                       </span>
@@ -153,8 +159,7 @@ export default function VoteTool() {
                     href={VOTE_TELEGRAM_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center justify-between gap-4 rounded-2xl bg-white border border-line text-ink px-5 py-4 hover:border-line-strong transition-colors"
-                    style={{ opacity: 0 }}
+                    className="group relative flex items-center justify-between gap-4 rounded-2xl bg-white border border-line text-ink px-5 py-4 transition-all duration-200 hover:border-ink hover:shadow-card hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand"
                   >
                     <span className="flex items-center gap-3">
                       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-muted text-ink">

@@ -18,13 +18,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/tools/idea-to-tool`,
+      url: `${SITE_URL}/tools/pdf-translate`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${SITE_URL}/tools/gemini-translate`,
+      url: `${SITE_URL}/tools/watermark-remover`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,

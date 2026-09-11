@@ -1,0 +1,10 @@
+﻿poppler/
+pdf-test-env/
+check_*.png
+watermarked_before-*.png
+watermarked_after-*.png
+clean_control_before-*.png
+clean_control_after-*.png
+*.pdf
+*.png
+ai_marked.pdf
